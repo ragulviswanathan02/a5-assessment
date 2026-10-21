@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FormField } from '@/types/database';
-import { UserCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { UserCheck, Sparkles, AlertCircle, Edit3 } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -22,7 +22,14 @@ export default function RegistrationForm({
   onStart,
 }: Props) {
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [otherValues, setOtherValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isOtherOption = (val: string) => {
+    if (!val) return false;
+    const lower = val.trim().toLowerCase();
+    return lower === 'other' || lower === 'others' || lower.startsWith('other ');
+  };
 
   const handleChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -35,15 +42,39 @@ export default function RegistrationForm({
     }
   };
 
+  const handleOtherChange = (key: string, value: string) => {
+    setOtherValues((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
+    const finalData: Record<string, string> = { ...formData };
 
     formFields.forEach((field) => {
-      const val = formData[field.field_key]?.trim() || '';
-      if (field.is_required && !val) {
-        newErrors[field.field_key] = `${field.label} is required.`;
+      let val = formData[field.field_key]?.trim() || '';
+
+      // If "Other" selected in dropdown, validate and use manual typing value
+      if (field.field_type === 'dropdown' && isOtherOption(val)) {
+        const customOtherVal = otherValues[field.field_key]?.trim() || '';
+        if (field.is_required && !customOtherVal) {
+          newErrors[field.field_key] = `Please enter your specific ${field.label.toLowerCase()}.`;
+        } else if (customOtherVal) {
+          finalData[field.field_key] = customOtherVal;
+        }
+      } else {
+        if (field.is_required && !val) {
+          newErrors[field.field_key] = `${field.label} is required.`;
+        }
       }
+
       if (field.field_type === 'email' && val) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(val)) {
@@ -63,7 +94,7 @@ export default function RegistrationForm({
       return;
     }
 
-    onStart(formData);
+    onStart(finalData);
   };
 
   return (
@@ -105,6 +136,8 @@ export default function RegistrationForm({
         <form onSubmit={handleSubmit} className="space-y-5">
           {formFields.map((field) => {
             const hasError = !!errors[field.field_key];
+            const currentSelected = formData[field.field_key] || '';
+            const showsOtherInput = field.field_type === 'dropdown' && isOtherOption(currentSelected);
 
             return (
               <div key={field.id} className="space-y-1.5">
@@ -114,22 +147,40 @@ export default function RegistrationForm({
                 </label>
 
                 {field.field_type === 'dropdown' ? (
-                  <select
-                    value={formData[field.field_key] || ''}
-                    onChange={(e) => handleChange(field.field_key, e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-xl border bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 transition-all ${
-                      hasError
-                        ? 'border-rose-400 focus:ring-rose-200'
-                        : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
-                    }`}
-                  >
-                    <option value="">Select your option...</option>
-                    {(field.options || []).map((opt, i) => (
-                      <option key={i} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="space-y-2">
+                    <select
+                      value={currentSelected}
+                      onChange={(e) => handleChange(field.field_key, e.target.value)}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 transition-all ${
+                        hasError
+                          ? 'border-rose-400 focus:ring-rose-200'
+                          : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
+                      }`}
+                    >
+                      <option value="">Select your option...</option>
+                      {(field.options || []).map((opt, i) => (
+                        <option key={i} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Dynamic Typing Box when "Other" is selected */}
+                    {showsOtherInput && (
+                      <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                        <input
+                          type="text"
+                          required={field.is_required}
+                          autoFocus
+                          placeholder={`Please enter your ${field.label.toLowerCase()} manually...`}
+                          value={otherValues[field.field_key] || ''}
+                          onChange={(e) => handleOtherChange(field.field_key, e.target.value)}
+                          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-indigo-300 bg-indigo-50/40 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all placeholder:text-slate-400"
+                        />
+                        <Edit3 className="w-4 h-4 text-indigo-500 absolute left-3 top-3" />
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <input
                     type={
