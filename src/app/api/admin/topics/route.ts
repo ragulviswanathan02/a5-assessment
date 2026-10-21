@@ -17,20 +17,11 @@ export async function GET() {
       });
     }
 
-    // 2. Fallback: extract distinct topics from existing questions
-    const { data: questions } = await supabase
-      .from('questions')
-      .select('topic');
-
-    const uniqueFromQuestions = Array.from(
-      new Set((questions || []).map((q) => q.topic).filter(Boolean))
-    );
-
-    const defaultList = uniqueFromQuestions.length > 0
-      ? uniqueFromQuestions
-      : ['General', 'Aptitude', 'Core Subject'];
-
-    return NextResponse.json({ success: true, topics: defaultList });
+    // 2. Return clean default list (no automatic re-injection of old CSE topics)
+    return NextResponse.json({
+      success: true,
+      topics: ['General', 'Aptitude'],
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -54,7 +45,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      // If table doesn't exist or already exists, still return success for client persistence
+      // Table may not exist; client localStorage also persists it
       return NextResponse.json({ success: true, name: cleanName, note: error.message });
     }
 

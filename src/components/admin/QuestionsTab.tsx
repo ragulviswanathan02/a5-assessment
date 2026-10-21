@@ -52,40 +52,31 @@ export default function QuestionsTab({
   const [newTopicInput, setNewTopicInput] = useState('');
   const [showNewTopicBox, setShowNewTopicBox] = useState(false);
 
-  // Load custom predefined topics on mount
+  // Load custom predefined topics on mount (respect user additions and deletions)
   useEffect(() => {
-    // 1. Fetch from server API
-    fetch('/api/admin/topics')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.topics) {
-          setPredefinedTopics((prev) => {
-            const merged = Array.from(new Set([...prev, ...data.topics]));
-            return merged.length > 0 ? merged : ['General', 'Aptitude'];
-          });
-        }
-      })
-      .catch(() => {});
-
-    // 2. Fetch from localStorage if exists
+    let localFound = false;
     try {
       const saved = localStorage.getItem('a5_predefined_topics');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setPredefinedTopics((prev) => Array.from(new Set([...prev, ...parsed])));
+          setPredefinedTopics(parsed);
+          localFound = true;
         }
       }
     } catch (e) {}
-  }, []);
 
-  // Merge distinct topics from existing questions
-  useEffect(() => {
-    if (questions.length > 0) {
-      const existingTopics = questions.map((q) => q.topic).filter(Boolean);
-      setPredefinedTopics((prev) => Array.from(new Set([...prev, ...existingTopics])));
+    if (!localFound) {
+      fetch('/api/admin/topics')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.topics && data.topics.length > 0) {
+            setPredefinedTopics(data.topics);
+          }
+        })
+        .catch(() => {});
     }
-  }, [questions]);
+  }, []);
 
   // Options for Choice questions
   const [options, setOptions] = useState<string[]>([
