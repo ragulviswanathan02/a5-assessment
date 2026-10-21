@@ -2,17 +2,13 @@
 
 import React, { useState } from 'react';
 import { Paper } from '@/types/database';
-import { supabase } from '@/lib/supabase';
 import {
   Plus,
-  Radio,
   Copy,
   Check,
   Clock,
   Trash2,
-  ExternalLink,
-  Sparkles,
-  CheckCircle,
+  Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -37,10 +33,13 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
   const handleSetActive = async (paperId: string) => {
     try {
       setLoadingAction(true);
-      // Deactivate all papers first
-      await supabase.from('papers').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
-      // Activate selected
-      await supabase.from('papers').update({ is_active: true }).eq('id', paperId);
+      const res = await fetch('/api/admin/papers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paperId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to set live test');
       onRefresh();
     } catch (err: any) {
       alert('Error updating active paper: ' + err.message);
@@ -67,66 +66,29 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
       setLoadingAction(true);
       const isFirst = papers.length === 0;
 
-      const { data: newPaper, error } = await supabase
-        .from('papers')
-        .insert({
+      const res = await fetch('/api/admin/papers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          duration_minutes: Number(durationMinutes) || 0,
-          is_active: isFirst,
-          show_results_immediately: showResultsImmediately,
-          track_tab_switches: trackTabSwitches,
-        })
-        .select()
-        .single();
+          durationMinutes: Number(durationMinutes) || 0,
+          isActive: isFirst,
+          showResultsImmediately,
+          trackTabSwitches,
+        }),
+      });
 
-      if (error) throw error;
-
-      // Add default essential form fields for this new paper
-      await supabase.from('form_fields').insert([
-        {
-          paper_id: newPaper.id,
-          field_key: 'full_name',
-          label: 'Full Name',
-          field_type: 'text',
-          options: [],
-          is_required: true,
-          order_index: 1,
-        },
-        {
-          paper_id: newPaper.id,
-          field_key: 'email',
-          label: 'Email Address',
-          field_type: 'email',
-          options: [],
-          is_required: true,
-          order_index: 2,
-        },
-        {
-          paper_id: newPaper.id,
-          field_key: 'phone',
-          label: 'Phone Number',
-          field_type: 'tel',
-          options: [],
-          is_required: true,
-          order_index: 3,
-        },
-        {
-          paper_id: newPaper.id,
-          field_key: 'college',
-          label: 'College Name',
-          field_type: 'dropdown',
-          options: ['CEG Anna University', 'PSG College of Technology', 'MIT Chennai', 'SSN College of Engineering', 'Other'],
-          is_required: true,
-          order_index: 4,
-        },
-      ]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create paper');
 
       setShowCreateModal(false);
       setTitle('');
       setDescription('');
       onRefresh();
-      onSelectPaper(newPaper.id);
+      if (data.data?.id) {
+        onSelectPaper(data.data.id);
+      }
     } catch (err: any) {
       alert('Failed to create paper: ' + err.message);
     } finally {
@@ -142,8 +104,9 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
 
     try {
       setLoadingAction(true);
-      const { error } = await supabase.from('papers').delete().eq('id', paperId);
-      if (error) throw error;
+      const res = await fetch(`/api/admin/papers?id=${paperId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete paper');
       onRefresh();
     } catch (err: any) {
       alert('Failed to delete paper: ' + err.message);
@@ -355,9 +318,10 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                 <button
                   type="submit"
                   disabled={loadingAction}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  Create Paper
+                  {loadingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{loadingAction ? 'Creating...' : 'Create Paper'}</span>
                 </button>
               </div>
             </form>

@@ -2,19 +2,17 @@
 
 import React, { useState } from 'react';
 import { Paper, Question, QuestionType } from '@/types/database';
-import { supabase } from '@/lib/supabase';
 import {
   Plus,
   Trash2,
-  CheckCircle2,
   Tag,
   FileQuestion,
-  Sparkles,
-  HelpCircle,
   Check,
   CheckSquare,
   Type,
   List,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
 interface Props {
@@ -34,6 +32,7 @@ export default function QuestionsTab({
 }: Props) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Form State
   const [questionText, setQuestionText] = useState('');
@@ -94,6 +93,7 @@ export default function QuestionsTab({
 
     try {
       setLoading(true);
+      setErrorMessage(null);
 
       let correctAnswersToSave: (number | string)[] = [];
       let finalOptions: string[] = [];
@@ -112,27 +112,32 @@ export default function QuestionsTab({
           .filter(Boolean);
       }
 
-      const { error } = await supabase.from('questions').insert({
-        paper_id: selectedPaperId,
-        question_text: questionText.trim(),
-        question_type: questionType,
-        topic: topic.trim() || 'General',
-        options: finalOptions,
-        correct_answers: correctAnswersToSave,
-        marks: Number(marks) || 1,
-        negative_marks: Number(negativeMarks) || 0,
-        explanation: explanation.trim(),
-        order_index: questions.length + 1,
+      const res = await fetch('/api/admin/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paperId: selectedPaperId,
+          questionText: questionText.trim(),
+          questionType,
+          topic: topic.trim() || 'General',
+          options: finalOptions,
+          correctAnswers: correctAnswersToSave,
+          marks: Number(marks) || 1,
+          negativeMarks: Number(negativeMarks) || 0,
+          explanation: explanation.trim(),
+          orderIndex: questions.length + 1,
+        }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add question');
 
       setShowAddModal(false);
       setQuestionText('');
       setExplanation('');
       onRefresh();
     } catch (err: any) {
-      alert('Failed to add question: ' + err.message);
+      setErrorMessage(err.message || 'Failed to save question');
     } finally {
       setLoading(false);
     }
@@ -142,7 +147,9 @@ export default function QuestionsTab({
     if (!confirm('Are you sure you want to delete this question?')) return;
     try {
       setLoading(true);
-      await supabase.from('questions').delete().eq('id', qId);
+      const res = await fetch(`/api/admin/questions?id=${qId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete question');
       onRefresh();
     } catch (err: any) {
       alert('Failed to delete question: ' + err.message);
@@ -173,7 +180,10 @@ export default function QuestionsTab({
         </div>
 
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setShowAddModal(true);
+            setErrorMessage(null);
+          }}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold shadow-xs cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
@@ -332,6 +342,13 @@ export default function QuestionsTab({
                 &times;
               </button>
             </div>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSaveQuestion} className="space-y-4 text-xs md:text-sm">
               {/* Question Text */}
@@ -599,9 +616,10 @@ export default function QuestionsTab({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  Save Question
+                  {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{loading ? 'Saving...' : 'Save Question'}</span>
                 </button>
               </div>
             </form>
