@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Paper, Question, QuestionType } from '@/types/database';
 import {
   Plus,
@@ -15,6 +15,8 @@ import {
   AlertCircle,
   Pencil,
   Info,
+  X,
+  FolderPlus,
 } from 'lucide-react';
 
 interface Props {
@@ -39,11 +41,51 @@ export default function QuestionsTab({
 
   // Form State (for both Add and Edit)
   const [questionText, setQuestionText] = useState('');
-  const [topic, setTopic] = useState('Aptitude');
+  const [topic, setTopic] = useState('General');
   const [questionType, setQuestionType] = useState<QuestionType>('single_choice');
   const [marks, setMarks] = useState(1);
   const [negativeMarks, setNegativeMarks] = useState(0);
   const [explanation, setExplanation] = useState('');
+
+  // Dynamic Predefined Topics State (No hardcoded CSE list)
+  const [predefinedTopics, setPredefinedTopics] = useState<string[]>(['General', 'Aptitude']);
+  const [newTopicInput, setNewTopicInput] = useState('');
+  const [showNewTopicBox, setShowNewTopicBox] = useState(false);
+
+  // Load custom predefined topics on mount
+  useEffect(() => {
+    // 1. Fetch from server API
+    fetch('/api/admin/topics')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.topics) {
+          setPredefinedTopics((prev) => {
+            const merged = Array.from(new Set([...prev, ...data.topics]));
+            return merged.length > 0 ? merged : ['General', 'Aptitude'];
+          });
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch from localStorage if exists
+    try {
+      const saved = localStorage.getItem('a5_predefined_topics');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPredefinedTopics((prev) => Array.from(new Set([...prev, ...parsed])));
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  // Merge distinct topics from existing questions
+  useEffect(() => {
+    if (questions.length > 0) {
+      const existingTopics = questions.map((q) => q.topic).filter(Boolean);
+      setPredefinedTopics((prev) => Array.from(new Set([...prev, ...existingTopics])));
+    }
+  }, [questions]);
 
   // Options for Choice questions
   const [options, setOptions] = useState<string[]>([
@@ -54,9 +96,48 @@ export default function QuestionsTab({
   ]);
   const [singleCorrectIndex, setSingleCorrectIndex] = useState<number>(0);
   const [multiCorrectIndices, setMultiCorrectIndices] = useState<number[]>([0]);
-  const [typingAcceptedAnswers, setTypingAcceptedAnswers] = useState('discrete, continuous');
+  const [typingAcceptedAnswers, setTypingAcceptedAnswers] = useState('keyword 1, keyword 2');
 
-  const topicSuggestions = ['Aptitude', 'Reasoning', 'Verbal', 'Python', 'Web Development', 'Database', 'Soft Skills'];
+  // Add a new custom topic
+  const handleAddNewTopic = () => {
+    if (!newTopicInput.trim()) return;
+    const clean = newTopicInput.trim();
+    if (!predefinedTopics.includes(clean)) {
+      const updated = [...predefinedTopics, clean];
+      setPredefinedTopics(updated);
+      try {
+        localStorage.setItem('a5_predefined_topics', JSON.stringify(updated));
+      } catch (e) {}
+
+      fetch('/api/admin/topics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clean }),
+      }).catch(() => {});
+    }
+
+    setTopic(clean);
+    setNewTopicInput('');
+    setShowNewTopicBox(false);
+  };
+
+  // Delete a topic from predefined list
+  const handleDeleteTopic = (topicName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = predefinedTopics.filter((t) => t !== topicName);
+    setPredefinedTopics(updated);
+    try {
+      localStorage.setItem('a5_predefined_topics', JSON.stringify(updated));
+    } catch (e) {}
+
+    fetch(`/api/admin/topics?name=${encodeURIComponent(topicName)}`, {
+      method: 'DELETE',
+    }).catch(() => {});
+
+    if (topic === topicName) {
+      setTopic(updated[0] || 'General');
+    }
+  };
 
   // Open Edit Modal
   const handleOpenEdit = (q: Question) => {
@@ -85,7 +166,7 @@ export default function QuestionsTab({
   const handleOpenAdd = () => {
     setEditingQuestion(null);
     setQuestionText('');
-    setTopic('Aptitude');
+    setTopic(predefinedTopics[0] || 'General');
     setQuestionType('single_choice');
     setMarks(1);
     setNegativeMarks(0);
@@ -246,6 +327,68 @@ export default function QuestionsTab({
           <Plus className="w-4 h-4" />
           <span>Add New Question</span>
         </button>
+      </div>
+
+      {/* Predefined Topics Management Card */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+          <div className="flex items-center gap-2">
+            <Tag className="w-4 h-4 text-indigo-600" />
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Predefined Assessment Topics
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Add topic (e.g. Mechanical, Physics, Maths)..."
+              value={newTopicInput}
+              onChange={(e) => setNewTopicInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddNewTopic();
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 w-52 sm:w-64"
+            />
+            <button
+              type="button"
+              onClick={handleAddNewTopic}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Topic</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Topic Pills List */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {predefinedTopics.map((top) => (
+            <span
+              key={top}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium"
+            >
+              <span>{top}</span>
+              <button
+                type="button"
+                onClick={(e) => handleDeleteTopic(top, e)}
+                className="text-slate-400 hover:text-rose-600 font-bold ml-0.5 cursor-pointer"
+                title={`Remove ${top} from predefined list`}
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+
+          {predefinedTopics.length === 0 && (
+            <span className="text-xs text-slate-400 italic">
+              No predefined topics yet. Add your custom topics above.
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Questions List */}
@@ -497,33 +640,81 @@ export default function QuestionsTab({
                 </div>
               </div>
 
-              {/* Topic & Suggestion Pills */}
+              {/* Topic Selection with Custom Predefined Manager */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Topic / Category <span className="text-slate-400 font-normal">(Used for graph analytics)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-700">
+                    Topic / Category <span className="text-slate-400 font-normal">(Used for graph analytics)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewTopicBox(!showNewTopicBox)}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {showNewTopicBox ? 'Cancel' : '+ Add Custom Topic'}
+                  </button>
+                </div>
+
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Aptitude, Python, Database"
+                  placeholder="Select from below or type custom topic..."
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100 mb-1.5"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100 mb-2 font-medium"
                 />
-                <div className="flex flex-wrap gap-1.5">
-                  {topicSuggestions.map((top) => (
+
+                {/* Inline Add Topic Box */}
+                {showNewTopicBox && (
+                  <div className="flex items-center gap-2 p-2.5 mb-2 bg-indigo-50/70 border border-indigo-200 rounded-xl animate-in fade-in">
+                    <input
+                      type="text"
+                      placeholder="Enter new topic name (e.g. Mechanical, Physics, Accounts)..."
+                      value={newTopicInput}
+                      onChange={(e) => setNewTopicInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddNewTopic();
+                        }
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    />
                     <button
-                      key={top}
                       type="button"
+                      onClick={handleAddNewTopic}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg cursor-pointer shadow-2xs"
+                    >
+                      Save Topic
+                    </button>
+                  </div>
+                )}
+
+                {/* Clickable Predefined Topic Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  {predefinedTopics.map((top) => (
+                    <span
+                      key={top}
                       onClick={() => setTopic(top)}
-                      className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                         topic === top
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                          ? 'bg-indigo-600 text-white border-indigo-600 font-semibold shadow-2xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
-                      {top}
-                    </button>
+                      <span>{top}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteTopic(top, e)}
+                        className={`text-xs ml-0.5 hover:text-rose-600 transition-colors cursor-pointer ${
+                          topic === top ? 'text-indigo-200' : 'text-slate-400'
+                        }`}
+                        title={`Remove ${top} from list`}
+                      >
+                        &times;
+                      </button>
+                    </span>
                   ))}
                 </div>
               </div>
