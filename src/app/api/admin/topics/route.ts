@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 // GET: Fetch predefined topics
 export async function GET() {
@@ -30,6 +31,10 @@ export async function GET() {
 // POST: Add new predefined topic
 export async function POST(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const { name } = await request.json();
     if (!name || !name.trim()) {
       return NextResponse.json({ success: false, error: 'Topic name required' }, { status: 400 });
@@ -58,6 +63,10 @@ export async function POST(request: Request) {
 // DELETE: Delete predefined topic
 export async function DELETE(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const name = searchParams.get('name');
 

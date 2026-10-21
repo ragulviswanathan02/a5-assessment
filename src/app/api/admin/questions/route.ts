@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 // POST: Add Question
 export async function POST(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { paperId, questionText, questionType, topic, options = [], correctAnswers = [], marks = 1, negativeMarks = 0, explanation = '', orderIndex = 0 } = body;
 
@@ -41,6 +46,10 @@ export async function POST(request: Request) {
 // PUT: Edit Existing Question
 export async function PUT(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, questionText, questionType, topic, options = [], correctAnswers = [], marks = 1, negativeMarks = 0, explanation = '' } = body;
 
@@ -77,6 +86,10 @@ export async function PUT(request: Request) {
 // DELETE: Delete Question
 export async function DELETE(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

@@ -7,8 +7,7 @@ import { Paper, Question, FormField } from '@/types/database';
 import RegistrationForm from '@/components/student/RegistrationForm';
 import ExamInterface from '@/components/student/ExamInterface';
 import ResultScreen from '@/components/student/ResultScreen';
-import { Shield, Sparkles, Loader2, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 function AssessmentApp() {
   const searchParams = useSearchParams();
@@ -66,10 +65,10 @@ function AssessmentApp() {
         if (fError) throw fError;
         setFormFields(fields || []);
 
-        // Fetch questions
+        // Fetch questions securely without exposing correct_answers and explanation
         const { data: qData, error: qError } = await supabase
           .from('questions')
-          .select('*')
+          .select('id, paper_id, question_text, question_type, topic, options, marks, negative_marks, order_index')
           .eq('paper_id', activePaper.id)
           .order('order_index', { ascending: true });
 
@@ -77,7 +76,7 @@ function AssessmentApp() {
         setQuestions((qData || []) as Question[]);
       } catch (err: any) {
         console.error('Error fetching paper:', err);
-        setError(err.message || 'Failed to load test paper. Please verify your Supabase database connection.');
+        setError(err.message || 'Failed to load test paper. Please verify your connection.');
       } finally {
         setLoading(false);
       }
@@ -143,17 +142,7 @@ function AssessmentApp() {
             <AlertCircle className="w-7 h-7" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">Notice</h2>
-          <p className="text-slate-600 text-sm mb-6 leading-relaxed">{error}</p>
-
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-center gap-4">
-            <Link
-              href="/admin"
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              Go to Admin Portal
-            </Link>
-          </div>
+          <p className="text-slate-600 text-sm leading-relaxed">{error}</p>
         </div>
       </div>
     );
@@ -173,13 +162,6 @@ function AssessmentApp() {
                 Assessment Portal
               </span>
             </div>
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-all"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Admin Login</span>
-            </Link>
           </div>
         </header>
       )}

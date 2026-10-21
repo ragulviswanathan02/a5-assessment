@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 // POST: Add new form field
 export async function POST(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { paperId, fieldKey, label, fieldType, options = [], isRequired = true, orderIndex = 0 } = body;
 
@@ -29,13 +34,11 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error adding field to Supabase:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
-    console.error('Server error in form-fields POST:', error);
     return NextResponse.json({ success: false, error: error.message || 'Internal error' }, { status: 500 });
   }
 }
@@ -43,6 +46,10 @@ export async function POST(request: Request) {
 // PUT: Edit existing form field
 export async function PUT(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, label, fieldType, options = [], isRequired } = body;
 
@@ -66,7 +73,6 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error updating field:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
@@ -79,6 +85,10 @@ export async function PUT(request: Request) {
 // PATCH: Toggle is_required or order
 export async function PATCH(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, isRequired } = body;
 
@@ -106,6 +116,10 @@ export async function PATCH(request: Request) {
 // DELETE: Remove form field
 export async function DELETE(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

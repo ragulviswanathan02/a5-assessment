@@ -14,6 +14,7 @@ export async function POST(request: Request) {
 
     const cleanUsername = String(username).trim();
     let authenticated = false;
+    let foundInDb = false;
     let adminFullName = 'Administrator';
 
     // 1. Check Supabase `admins` table
@@ -25,19 +26,20 @@ export async function POST(request: Request) {
         .single();
 
       if (!dbError && adminUser) {
+        foundInDb = true;
         if (adminUser.password_hash === password || adminUser.password === password) {
           authenticated = true;
           adminFullName = adminUser.full_name || cleanUsername;
         }
       }
     } catch (dbErr) {
-      console.warn('Database admin check skipped, checking environment fallback:', dbErr);
+      console.warn('Database admin check skipped:', dbErr);
     }
 
-    // 2. Fallback to environment variable ADMIN_PASSWORD (username 'admin')
-    if (!authenticated) {
-      const fallbackPass = process.env.ADMIN_PASSWORD || 'admin123';
-      if (cleanUsername.toLowerCase() === 'admin' && password === fallbackPass) {
+    // 2. Only fallback if user is NOT registered in database table yet
+    if (!foundInDb && !authenticated) {
+      const fallbackPass = process.env.ADMIN_PASSWORD;
+      if (fallbackPass && cleanUsername.toLowerCase() === 'admin' && password === fallbackPass) {
         authenticated = true;
       }
     }

@@ -70,20 +70,58 @@ export default function ExamInterface({
     return () => clearInterval(timer);
   }, [totalSeconds, handleFinalSubmit]);
 
-  // Tab switch listener (Anti-Cheat)
+  // Anti-Cheat: Tab switch, window blur, and shortcut restrictions
   useEffect(() => {
-    if (!paper.track_tab_switches) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
+    let lastSwitchTime = 0;
+    const triggerTabSwitch = () => {
+      if (!paper.track_tab_switches) return;
+      const now = Date.now();
+      if (now - lastSwitchTime > 1200) {
+        lastSwitchTime = now;
         setTabSwitches((prev) => prev + 1);
         setShowSwitchWarning(true);
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        triggerTabSwitch();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      triggerTabSwitch();
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Ctrl+C, Ctrl+U, Ctrl+Shift+I/J/C, F12
+      if (
+        (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'u' || e.key === 'U')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+        e.key === 'F12'
+      ) {
+        const target = e.target as HTMLElement;
+        const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+        if (!isInput) {
+          e.preventDefault();
+        }
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [paper.track_tab_switches]);
 
@@ -246,7 +284,10 @@ export default function ExamInterface({
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Active Question Workspace */}
         <div className="lg:col-span-8 flex flex-col justify-between">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-xs">
+          <div
+            onCopy={(e) => e.preventDefault()}
+            className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-xs select-none"
+          >
             {/* Question Meta Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
               <div className="flex items-center gap-2">

@@ -72,6 +72,51 @@ export async function POST(request: Request) {
       studentData.institution ||
       '';
 
+    const cleanEmail = String(studentEmail || '').trim().toLowerCase();
+    const cleanPhone = String(studentPhone || '').trim();
+
+    // Prevent duplicate attempts / retakes for the same test paper
+    if (cleanEmail) {
+      const { data: existingEmail } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('paper_id', paperId)
+        .ilike('student_email', cleanEmail)
+        .limit(1);
+
+      if (existingEmail && existingEmail.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'An assessment has already been submitted with this email address. Duplicate retakes are not allowed.',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (cleanPhone) {
+      const { data: existingPhone } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('paper_id', paperId)
+        .eq('student_phone', cleanPhone)
+        .limit(1);
+
+      if (existingPhone && existingPhone.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'An assessment has already been submitted with this phone number. Duplicate retakes are not allowed.',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    const safeTabSwitches = Math.max(0, Math.floor(Number(tabSwitchCount) || 0));
+    const safeTimeTaken = Math.max(0, Math.floor(Number(timeTakenSeconds) || 0));
+
     // 5. Store submission in Supabase
     const { data: submission, error: subError } = await supabase
       .from('submissions')
@@ -87,8 +132,8 @@ export async function POST(request: Request) {
         max_score: grading.maxScore,
         percentage: grading.percentage,
         topic_scores: grading.topicScores,
-        tab_switch_count: Number(tabSwitchCount) || 0,
-        time_taken_seconds: Number(timeTakenSeconds) || 0,
+        tab_switch_count: safeTabSwitches,
+        time_taken_seconds: safeTimeTaken,
       })
       .select()
       .single();

@@ -21,7 +21,7 @@ export interface Question {
   question_type: QuestionType;
   topic: string;
   options: string[]; // For single_choice and multiple_choice
-  correct_answers: (number | string)[]; // array of indices for choice, array of strings for typing
+  correct_answers?: (number | string)[]; // array of indices for choice, array of strings for typing
   marks: number;
   negative_marks: number;
   explanation?: string;

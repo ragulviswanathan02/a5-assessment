@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 // POST: Create Paper
 export async function POST(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { title, description = '', durationMinutes = 30, isActive = false, showResultsImmediately = true, trackTabSwitches = true } = body;
 
@@ -45,6 +50,10 @@ export async function POST(request: Request) {
 // PATCH: Set Active Paper
 export async function PATCH(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { paperId } = body;
 
@@ -70,6 +79,10 @@ export async function PATCH(request: Request) {
 // DELETE: Delete paper
 export async function DELETE(request: Request) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
