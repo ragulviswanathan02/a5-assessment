@@ -65,11 +65,29 @@ CREATE TABLE IF NOT EXISTS public.submissions (
     submitted_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. Enable Row Level Security (RLS) & Grant Access for Anon Key
+-- 5. Create Admins Authentication Table
+CREATE TABLE IF NOT EXISTS public.admins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    full_name TEXT DEFAULT 'Administrator',
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. Enable Row Level Security (RLS) & Grant Access for Anon Key
 ALTER TABLE public.papers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.form_fields ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public access for admins" ON public.admins;
+CREATE POLICY "Public access for admins" ON public.admins FOR ALL USING (true) WITH CHECK (true);
+
+-- Insert initial admin user
+INSERT INTO public.admins (username, password_hash, full_name)
+VALUES ('admin', 'admin123', 'A5 Administrator')
+ON CONFLICT (username) DO NOTHING;
 
 -- Allow public read/write access (policies for development & testing with anon key)
 DROP POLICY IF EXISTS "Public access for papers" ON public.papers;
