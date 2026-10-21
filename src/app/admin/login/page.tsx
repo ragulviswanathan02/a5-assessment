@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Authentication</h1>
           <p className="text-slate-500 text-xs md:text-sm mt-1">
-            Access test papers, Google Form builder, and student mark analytics.
+            Access test papers, registration form builder, and candidate mark analytics.
           </p>
         </div>
 
@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
             <div className="relative">
               <input
                 type="password"
-                placeholder="Enter admin password (default: admin123)"
+                placeholder="Enter admin password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Student Test
           </Link>
-          <span>Default: admin123</span>
+          <span className="text-slate-400">Secure Access</span>
         </div>
       </div>
     </div>

@@ -291,7 +291,7 @@ export default function AdminDashboardPage() {
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-3 px-4 text-center text-xs text-slate-500">
-        <p>A5 Assessment Administrator Control • Connected to Supabase Project: rfpdqxjxnceyfmzzapkq</p>
+        <p>© {new Date().getFullYear()} A5 Assessment Management Platform. All rights reserved.</p>
       </footer>
     </div>
   );
