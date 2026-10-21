@@ -62,13 +62,30 @@ export function evaluateAssessment(
       }
     } else if (q.question_type === 'text_input') {
       const cleanStudent = String(studentAns || '').trim().toLowerCase();
-      const acceptedAnswers = (q.correct_answers || []).map((ans) => String(ans).trim().toLowerCase());
+      const acceptedAnswers = (q.correct_answers || [])
+        .map((ans) => String(ans).trim().toLowerCase())
+        .filter(Boolean);
 
-      if (cleanStudent.length > 0 && acceptedAnswers.includes(cleanStudent)) {
-        isCorrect = true;
-        awarded = qMarks;
-      } else if (cleanStudent.length > 0 && qNeg > 0) {
-        awarded = -qNeg;
+      if (cleanStudent.length > 0 && acceptedAnswers.length > 0) {
+        // 1. Direct exact match (e.g. student typed exact keyword or phrase)
+        const exactMatch = acceptedAnswers.some((ans) => cleanStudent === ans);
+
+        // 2. Phrase containment: student sentence contains any of the accepted key phrases
+        const containsAnyKey = acceptedAnswers.some(
+          (ans) => ans.length > 1 && cleanStudent.includes(ans)
+        );
+
+        // 3. Multi-keyword match: if all keywords are present anywhere in the student response
+        const allKeywordsPresent =
+          acceptedAnswers.length > 1 &&
+          acceptedAnswers.every((ans) => cleanStudent.includes(ans));
+
+        if (exactMatch || containsAnyKey || allKeywordsPresent) {
+          isCorrect = true;
+          awarded = qMarks;
+        } else if (qNeg > 0) {
+          awarded = -qNeg;
+        }
       }
     }
 

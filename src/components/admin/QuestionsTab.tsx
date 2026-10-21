@@ -13,6 +13,8 @@ import {
   List,
   Loader2,
   AlertCircle,
+  Pencil,
+  Info,
 } from 'lucide-react';
 
 interface Props {
@@ -31,10 +33,11 @@ export default function QuestionsTab({
   onRefresh,
 }: Props) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Form State
+  // Form State (for both Add and Edit)
   const [questionText, setQuestionText] = useState('');
   const [topic, setTopic] = useState('Aptitude');
   const [questionType, setQuestionType] = useState<QuestionType>('single_choice');
@@ -49,16 +52,52 @@ export default function QuestionsTab({
     'Option C',
     'Option D',
   ]);
-  // Single choice: single index
   const [singleCorrectIndex, setSingleCorrectIndex] = useState<number>(0);
-  // Multi choice: set of indices
   const [multiCorrectIndices, setMultiCorrectIndices] = useState<number[]>([0]);
-  // Typing question: comma separated accepted answers
-  const [typingAcceptedAnswers, setTypingAcceptedAnswers] = useState('Answer 1, Answer 2');
+  const [typingAcceptedAnswers, setTypingAcceptedAnswers] = useState('discrete, continuous');
 
   const topicSuggestions = ['Aptitude', 'Reasoning', 'Verbal', 'Python', 'Web Development', 'Database', 'Soft Skills'];
 
-  // Handle Option text edit
+  // Open Edit Modal
+  const handleOpenEdit = (q: Question) => {
+    setEditingQuestion(q);
+    setQuestionText(q.question_text);
+    setTopic(q.topic || 'General');
+    setQuestionType(q.question_type);
+    setMarks(Number(q.marks) || 1);
+    setNegativeMarks(Number(q.negative_marks) || 0);
+    setExplanation(q.explanation || '');
+
+    if (q.question_type === 'single_choice') {
+      setOptions(q.options && q.options.length > 0 ? [...q.options] : ['Option A', 'Option B']);
+      setSingleCorrectIndex(Number(q.correct_answers?.[0]) || 0);
+    } else if (q.question_type === 'multiple_choice') {
+      setOptions(q.options && q.options.length > 0 ? [...q.options] : ['Option A', 'Option B']);
+      setMultiCorrectIndices((q.correct_answers || []).map(Number));
+    } else if (q.question_type === 'text_input') {
+      setTypingAcceptedAnswers((q.correct_answers || []).join(', '));
+    }
+
+    setErrorMessage(null);
+  };
+
+  // Open Add Modal
+  const handleOpenAdd = () => {
+    setEditingQuestion(null);
+    setQuestionText('');
+    setTopic('Aptitude');
+    setQuestionType('single_choice');
+    setMarks(1);
+    setNegativeMarks(0);
+    setExplanation('');
+    setOptions(['Option A', 'Option B', 'Option C', 'Option D']);
+    setSingleCorrectIndex(0);
+    setMultiCorrectIndices([0]);
+    setTypingAcceptedAnswers('Answer keyword 1, Answer keyword 2');
+    setErrorMessage(null);
+    setShowAddModal(true);
+  };
+
   const handleOptionChange = (idx: number, val: string) => {
     const updated = [...options];
     updated[idx] = val;
@@ -87,6 +126,7 @@ export default function QuestionsTab({
     }
   };
 
+  // Save (Create or Update)
   const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionText.trim()) return;
@@ -112,29 +152,49 @@ export default function QuestionsTab({
           .filter(Boolean);
       }
 
-      const res = await fetch('/api/admin/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paperId: selectedPaperId,
-          questionText: questionText.trim(),
-          questionType,
-          topic: topic.trim() || 'General',
-          options: finalOptions,
-          correctAnswers: correctAnswersToSave,
-          marks: Number(marks) || 1,
-          negativeMarks: Number(negativeMarks) || 0,
-          explanation: explanation.trim(),
-          orderIndex: questions.length + 1,
-        }),
-      });
+      if (editingQuestion) {
+        // UPDATE existing question
+        const res = await fetch('/api/admin/questions', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingQuestion.id,
+            questionText: questionText.trim(),
+            questionType,
+            topic: topic.trim() || 'General',
+            options: finalOptions,
+            correctAnswers: correctAnswersToSave,
+            marks: Number(marks) || 1,
+            negativeMarks: Number(negativeMarks) || 0,
+            explanation: explanation.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update question');
+        setEditingQuestion(null);
+      } else {
+        // CREATE new question
+        const res = await fetch('/api/admin/questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paperId: selectedPaperId,
+            questionText: questionText.trim(),
+            questionType,
+            topic: topic.trim() || 'General',
+            options: finalOptions,
+            correctAnswers: correctAnswersToSave,
+            marks: Number(marks) || 1,
+            negativeMarks: Number(negativeMarks) || 0,
+            explanation: explanation.trim(),
+            orderIndex: questions.length + 1,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to add question');
+        setShowAddModal(false);
+      }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add question');
-
-      setShowAddModal(false);
-      setQuestionText('');
-      setExplanation('');
       onRefresh();
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to save question');
@@ -180,10 +240,7 @@ export default function QuestionsTab({
         </div>
 
         <button
-          onClick={() => {
-            setShowAddModal(true);
-            setErrorMessage(null);
-          }}
+          onClick={handleOpenAdd}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold shadow-xs cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
@@ -212,21 +269,32 @@ export default function QuestionsTab({
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg">
                   +{q.marks} Mark{q.marks > 1 ? 's' : ''}
                 </span>
                 {q.negative_marks > 0 && (
-                  <span className="text-xs text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded">
+                  <span className="text-xs text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded-lg">
                     -{q.negative_marks} Neg
                   </span>
                 )}
+
+                {/* Edit Button */}
+                <button
+                  onClick={() => handleOpenEdit(q)}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition-colors cursor-pointer"
+                  title="Edit Question"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Delete Button */}
                 <button
                   onClick={() => handleDeleteQuestion(q.id)}
-                  className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                   title="Delete Question"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -294,17 +362,24 @@ export default function QuestionsTab({
 
               {q.question_type === 'text_input' && (
                 <div className="text-slate-700">
-                  <span className="font-semibold text-slate-900">Accepted Answer(s): </span>
-                  {(q.correct_answers || []).map((ans, aIdx) => (
-                    <span
-                      key={aIdx}
-                      className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-mono text-[11px] mr-1.5"
-                    >
-                      &quot;{ans}&quot;
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="font-semibold text-slate-900">Required Keywords / Accepted Phrases:</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">
+                      Smart Keyword Matching
                     </span>
-                  ))}
-                  <span className="text-[11px] text-slate-400 block mt-1">
-                    (Student typing will be matched case-insensitively with whitespace trimmed)
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(q.correct_answers || []).map((ans, aIdx) => (
+                      <span
+                        key={aIdx}
+                        className="inline-block bg-white border border-emerald-300 text-emerald-800 px-2.5 py-0.5 rounded-md font-mono text-[11px]"
+                      >
+                        &quot;{ans}&quot;
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-slate-500 block mt-1.5">
+                    💡 If a student writes a full sentence containing these concepts (e.g. &quot;...{q.correct_answers?.[0]}...&quot;), the system automatically validates and awards the marks!
                   </span>
                 </div>
               )}
@@ -329,14 +404,19 @@ export default function QuestionsTab({
         )}
       </div>
 
-      {/* Add Question Modal */}
-      {showAddModal && (
+      {/* Add / Edit Question Modal */}
+      {(showAddModal || editingQuestion) && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
-              <h3 className="font-bold text-slate-900 text-base">Create Assessment Question</h3>
+              <h3 className="font-bold text-slate-900 text-base">
+                {editingQuestion ? 'Edit Assessment Question' : 'Create Assessment Question'}
+              </h3>
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingQuestion(null);
+                }}
                 className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer"
               >
                 &times;
@@ -359,7 +439,7 @@ export default function QuestionsTab({
                 <textarea
                   rows={3}
                   required
-                  placeholder="Enter the full question text here..."
+                  placeholder="Enter the full question text here (e.g. What is digital and analog?)..."
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
@@ -411,7 +491,7 @@ export default function QuestionsTab({
                     <Type className="w-4 h-4 text-indigo-600" />
                     <div>
                       <div className="text-xs">Typing / Short Ans</div>
-                      <div className="text-[10px] text-slate-500 font-normal">Student types text</div>
+                      <div className="text-[10px] text-slate-500 font-normal">Keyword evaluation</div>
                     </div>
                   </div>
                 </div>
@@ -546,21 +626,32 @@ export default function QuestionsTab({
 
                 {/* 3. TYPING / SHORT ANSWER */}
                 {questionType === 'text_input' && (
-                  <div>
-                    <label className="block font-semibold text-slate-800 text-xs mb-1">
-                      Accepted Correct Answer(s) (comma-separated):
-                    </label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-slate-800 text-xs block">
+                        Required Keywords or Key Phrases (comma-separated):
+                      </label>
+                    </div>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. DROP TABLE, DROP"
+                      placeholder="e.g. discrete, continuous OR signals, transmitted"
                       value={typingAcceptedAnswers}
                       onChange={(e) => setTypingAcceptedAnswers(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-mono"
                     />
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Student response will be matched case-insensitively. You can add aliases separated by commas.
-                    </p>
+                    <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 text-[11px] text-slate-600 space-y-1">
+                      <p className="font-semibold text-indigo-900 flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 text-indigo-600" />
+                        How does grading evaluate this?
+                      </p>
+                      <p>
+                        • <strong>You don&apos;t need to write a whole paragraph</strong> — just write the core <strong>keywords</strong> or <strong>phrases</strong>.
+                      </p>
+                      <p>
+                        • If a student writes a descriptive answer containing these keywords (e.g., student writes: <em>&quot;Digital signals are discrete and analog are continuous...&quot;</em>), the system detects the keywords and awards the marks!
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -608,7 +699,10 @@ export default function QuestionsTab({
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingQuestion(null);
+                  }}
                   className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
@@ -619,7 +713,7 @@ export default function QuestionsTab({
                   className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{loading ? 'Saving...' : 'Save Question'}</span>
+                  <span>{loading ? 'Saving...' : editingQuestion ? 'Save Changes' : 'Save Question'}</span>
                 </button>
               </div>
             </form>
