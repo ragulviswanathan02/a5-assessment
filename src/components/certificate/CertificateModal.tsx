@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { X, Printer, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, Printer, Award, ShieldCheck } from 'lucide-react';
 
 export interface CertificateData {
   id?: string;
@@ -22,17 +22,17 @@ interface Props {
 }
 
 export default function CertificateModal({ data, onClose }: Props) {
-  const certificateRef = useRef<HTMLDivElement>(null);
+  const certRef = useRef<HTMLDivElement>(null);
 
   const dateObj = data.issueDate ? new Date(data.issueDate) : new Date();
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const year = dateObj.getFullYear();
-  const formattedDate = `${day}/${month}/${year}`;
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const yyyy = dateObj.getFullYear();
+  const formattedDate = `${dd}/${mm}/${yyyy}`;
 
   const certId =
     data.id ||
-    'A5A-' + year + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    `A5A-${yyyy}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   const qualifyingText =
     data.cutoffPercentage && data.cutoffPercentage > 0
@@ -41,273 +41,292 @@ export default function CertificateModal({ data, onClose }: Props) {
       ? `${data.cutoffMarks} Marks`
       : '70%';
 
-  const handlePrint = () => window.print();
+  const titleText = data.paperTitle || 'Industrial Automation Aptitude';
+  const collegeText = data.studentCollege || 'Your Institution';
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 print:p-0 print:bg-white print:fixed print:inset-0">
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      overflowY: 'auto',
+      background: 'rgba(2,6,23,0.88)',
+      backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '16px',
+    }}>
 
-      {/* Container Card */}
-      <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[95vh] print:max-h-none print:border-none print:shadow-none print:w-full print:rounded-none">
+      {/* Google Fonts */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700;800&display=swap"
+      />
 
-        {/* ── Action Bar (hidden in print) ── */}
-        <div className="flex items-center justify-between px-5 py-3 bg-slate-900 text-white shrink-0 print:hidden">
-          <div className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-amber-400" />
-            <span className="font-bold text-sm">Official Academy Certificate</span>
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold border border-emerald-500/30 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> {certId}
+      {/* Modal shell */}
+      <div style={{
+        width: '100%', maxWidth: '1000px',
+        background: '#fff',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.5)',
+        display: 'flex', flexDirection: 'column',
+        maxHeight: '95vh',
+      }}>
+
+        {/* ── Action bar ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 20px',
+          background: '#0c2340',
+          color: '#fff', flexShrink: 0,
+        }} className="print:hidden">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award style={{ width: 16, height: 16, color: '#fbbf24' }} />
+            <span style={{ fontWeight: 700, fontSize: '13px', fontFamily: 'Montserrat,sans-serif' }}>
+              Official Academy Certificate
+            </span>
+            <span style={{
+              marginLeft: '8px', padding: '2px 10px',
+              borderRadius: '999px',
+              background: 'rgba(52,211,153,0.15)',
+              color: '#6ee7b7', fontSize: '11px', fontWeight: 700,
+              border: '1px solid rgba(52,211,153,0.25)',
+              fontFamily: 'monospace',
+              display: 'flex', alignItems: 'center', gap: '4px',
+            }}>
+              <ShieldCheck style={{ width: 12, height: 12 }} /> {certId}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer active:scale-95 transition-all"
+              onClick={() => window.print()}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '6px 16px', borderRadius: '8px',
+                background: '#4f46e5', color: '#fff',
+                fontSize: '12px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif',
+              }}
             >
-              <Printer className="w-3.5 h-3.5" />
+              <Printer style={{ width: 13, height: 13 }} />
               Print / Save as PDF
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              style={{
+                padding: '6px', borderRadius: '8px',
+                background: 'transparent', border: 'none',
+                color: '#94a3b8', cursor: 'pointer',
+              }}
             >
-              <X className="w-4 h-4" />
+              <X style={{ width: 16, height: 16 }} />
             </button>
           </div>
         </div>
 
-        {/* ── Preview Scroll Area ── */}
-        <div className="flex-1 overflow-auto bg-slate-300/60 p-4 sm:p-8 flex items-start justify-center print:p-0 print:bg-white">
+        {/* ── Scroll area ── */}
+        <div style={{
+          flex: 1, overflowY: 'auto',
+          background: '#1e293b',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '32px',
+        }}>
 
-          {/* ──────────────────────────────────────────
-              PRINTABLE CERTIFICATE
-              Fixed aspect ratio, all content in safe zone.
-              Corners are purely decorative, small and non-overlapping.
-          ────────────────────────────────────────── */}
+          {/* ══════════════════════════════════════════
+              CERTIFICATE  950 × 670 px
+              CSS-only corners — zero overlap guarantee
+          ══════════════════════════════════════════ */}
           <div
             id="printable-certificate"
-            ref={certificateRef}
+            ref={certRef}
             style={{
-              width: '900px',
-              minHeight: '636px',
+              width: '950px',
+              height: '670px',
               position: 'relative',
-              background: '#ffffff',
-              fontFamily: "'Montserrat', 'Segoe UI', sans-serif",
-              color: '#0c2340',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+              background: 'linear-gradient(160deg,#fefefe 0%,#f9f6ef 50%,#fefcf7 100%)',
+              overflow: 'hidden',
+              fontFamily: "'Montserrat','Segoe UI',sans-serif",
+              color: '#1a2b4a',
+              flexShrink: 0,
             }}
           >
-            {/* ── Outer gold border ── */}
-            <div style={{
-              position: 'absolute', inset: '0', border: '3px solid #d4af37', pointerEvents: 'none', zIndex: 2,
-            }} />
-            {/* ── Inner thin border ── */}
-            <div style={{
-              position: 'absolute', inset: '10px', border: '1px solid rgba(212,175,55,0.4)', pointerEvents: 'none', zIndex: 2,
-            }} />
+            {/* ─── CSS-only layered triangle corners ─── */}
+            {/* ── Top-Left ── */}
+            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'115px 115px 0 0',borderColor:'#0c2340 transparent transparent transparent',zIndex:1 }} />
+            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'100px 100px 0 0',borderColor:'#b8962e transparent transparent transparent',zIndex:2 }} />
+            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'80px 80px 0 0',borderColor:'#f9f6ef transparent transparent transparent',zIndex:3 }} />
+            {/* ── Top-Right ── */}
+            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 115px 115px 0',borderColor:'transparent #0c2340 transparent transparent',zIndex:1 }} />
+            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 100px 100px 0',borderColor:'transparent #b8962e transparent transparent',zIndex:2 }} />
+            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 80px 80px 0',borderColor:'transparent #f9f6ef transparent transparent',zIndex:3 }} />
+            {/* ── Bottom-Left ── */}
+            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'115px 0 0 115px',borderColor:'transparent transparent transparent #0c2340',zIndex:1 }} />
+            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'100px 0 0 100px',borderColor:'transparent transparent transparent #b8962e',zIndex:2 }} />
+            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'80px 0 0 80px',borderColor:'transparent transparent transparent #f9f6ef',zIndex:3 }} />
+            {/* ── Bottom-Right ── */}
+            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 115px 115px',borderColor:'transparent transparent #0c2340 transparent',zIndex:1 }} />
+            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 100px 100px',borderColor:'transparent transparent #b8962e transparent',zIndex:2 }} />
+            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 80px 80px',borderColor:'transparent transparent #f9f6ef transparent',zIndex:3 }} />
 
-            {/* ── CORNER IMAGES (small, tucked into corners, behind content safe zone) ── */}
-            {/* Top-Left */}
-            <img src="/corner-tl-clean.png" alt="" aria-hidden="true"
-              style={{ position: 'absolute', top: 0, left: 0, width: '140px', height: '140px', objectFit: 'cover', objectPosition: 'top left', pointerEvents: 'none', zIndex: 1 }} />
-            {/* Top-Right */}
-            <img src="/corner-tr-clean.png" alt="" aria-hidden="true"
-              style={{ position: 'absolute', top: 0, right: 0, width: '140px', height: '140px', objectFit: 'cover', objectPosition: 'top right', pointerEvents: 'none', zIndex: 1 }} />
-            {/* Bottom-Left */}
-            <img src="/corner-bl-clean.png" alt="" aria-hidden="true"
-              style={{ position: 'absolute', bottom: 0, left: 0, width: '140px', height: '140px', objectFit: 'cover', objectPosition: 'bottom left', pointerEvents: 'none', zIndex: 1 }} />
-            {/* Bottom-Right */}
-            <img src="/corner-br-clean.png" alt="" aria-hidden="true"
-              style={{ position: 'absolute', bottom: 0, right: 0, width: '140px', height: '140px', objectFit: 'cover', objectPosition: 'bottom right', pointerEvents: 'none', zIndex: 1 }} />
+            {/* ─── Outer gold border ─── */}
+            <div style={{ position:'absolute',inset:0,border:'3px solid #c8a84b',pointerEvents:'none',zIndex:5 }} />
+            {/* ─── Inner thin gold border ─── */}
+            <div style={{ position:'absolute',inset:'12px',border:'1px solid rgba(200,168,75,0.45)',pointerEvents:'none',zIndex:5 }} />
 
-            {/* ────────────────────────────────────────
-                CONTENT BLOCK — padded safely inside corners
-            ──────────────────────────────────────── */}
+            {/* ════════════════ CONTENT (z-index 10, all clear of corners) ════════════════ */}
             <div style={{
-              position: 'relative',
-              zIndex: 10,
-              padding: '32px 120px 28px',   /* left/right 120px clears the 140px corners safely */
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              gap: '0',
+              position:'relative', zIndex:10,
+              height:'100%',
+              display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'space-between',
+              textAlign:'center',
+              padding:'28px 90px 24px',
             }}>
 
-              {/* ── 1. ACADEMY LOGO ── */}
-              <div style={{ marginBottom: '10px' }}>
+              {/* ── HEADER: Logo + Title ── */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/a5a-academy-logo.png"
                   alt="A5 Automation Training Academy"
-                  style={{ height: '68px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                  style={{ height:'60px', objectFit:'contain', display:'block', margin:'0 auto 8px' }}
                 />
-              </div>
-
-              {/* ── 2. CERTIFICATE OF / TITLE ── */}
-              <div style={{ marginBottom: '14px' }}>
                 <p style={{
-                  fontFamily: "'Cinzel', 'Times New Roman', serif",
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  letterSpacing: '4px',
-                  color: '#0c2340',
-                  textTransform: 'uppercase',
-                  margin: '0 0 4px',
+                  fontFamily:"'Cormorant Garamond','Times New Roman',serif",
+                  fontSize:'13px', fontWeight:600,
+                  letterSpacing:'5px', color:'#1a2b4a',
+                  textTransform:'uppercase', margin:'0 0 3px',
                 }}>
                   Certificate of
                 </p>
+                {/* Short gold rule */}
+                <div style={{
+                  width:'50px', height:'2px',
+                  background:'linear-gradient(90deg,transparent,#c8a84b,transparent)',
+                  margin:'0 auto 4px',
+                }} />
                 <h1 style={{
-                  fontFamily: "'Cinzel', 'Times New Roman', serif",
-                  fontSize: '24px',
-                  fontWeight: 900,
-                  letterSpacing: '3px',
-                  color: '#0c2340',
-                  textTransform: 'uppercase',
-                  lineHeight: 1.25,
-                  margin: 0,
+                  fontFamily:"'Cormorant Garamond','Times New Roman',serif",
+                  fontSize:'26px', fontWeight:700,
+                  letterSpacing:'2.5px', color:'#0c2340',
+                  textTransform:'uppercase', lineHeight:1.2, margin:0,
                 }}>
-                  {data.paperTitle
-                    ? data.paperTitle.length > 40
-                      ? data.paperTitle
-                      : data.paperTitle
-                    : 'Industrial Automation Aptitude'}
+                  {titleText}
                 </h1>
               </div>
 
-              {/* ── 3. CERTIFY TEXT ── */}
-              <p style={{
-                fontSize: '12px',
-                fontWeight: 500,
-                color: '#334155',
-                margin: '0 0 6px',
-                letterSpacing: '0.5px',
-              }}>
-                This is to certify that
-              </p>
+              {/* ── BODY: Recipient ── */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:'100%' }}>
+                <p style={{
+                  fontSize:'12px', fontWeight:500, color:'#64748b',
+                  letterSpacing:'1px', margin:'0 0 4px',
+                }}>
+                  This is to certify that
+                </p>
 
-              {/* ── 4. STUDENT NAME ── */}
-              <h2 style={{
-                fontFamily: "'Alex Brush', 'Dancing Script', cursive",
-                fontSize: '52px',
-                color: '#0b2545',
-                fontWeight: 400,
-                lineHeight: 1.1,
-                margin: '0 0 2px',
-                letterSpacing: '1px',
-              }}>
-                {data.studentName || 'Student Full Name'}
-              </h2>
+                {/* Student name — Great Vibes cursive */}
+                <div style={{
+                  fontFamily:"'Great Vibes','Brush Script MT',cursive",
+                  fontSize:'58px', color:'#0c2340',
+                  fontWeight:400, lineHeight:1.1,
+                  margin:'0 0 2px', letterSpacing:'1px',
+                }}>
+                  {data.studentName || 'Student Full Name'}
+                </div>
 
-              {/* ── Gold underline ── */}
-              <div style={{
-                width: '320px',
-                height: '1.5px',
-                background: 'linear-gradient(90deg, transparent 0%, #d4af37 30%, #f9df7b 50%, #d4af37 70%, transparent 100%)',
-                margin: '6px auto 14px',
-              }} />
+                {/* Gold gradient underline */}
+                <div style={{
+                  width:'340px', height:'1.5px',
+                  background:'linear-gradient(90deg,transparent 0%,#c8a84b 25%,#f0d060 50%,#c8a84b 75%,transparent 100%)',
+                  margin:'4px auto 12px',
+                }} />
 
-              {/* ── 5. COLLEGE ── */}
-              <p style={{
-                fontSize: '13px',
-                fontWeight: 700,
-                color: '#0c2340',
-                margin: '0 0 3px',
-              }}>
-                of {data.studentCollege || 'Hindustan College of Technology, Salem'}
-              </p>
+                <p style={{ fontSize:'13.5px', fontWeight:700, color:'#0c2340', margin:'0 0 3px' }}>
+                  of {collegeText}
+                </p>
+                <p style={{ fontSize:'12px', color:'#475569', margin:'0 0 3px' }}>
+                  has successfully qualified in the
+                </p>
+                <h3 style={{
+                  fontSize:'15px', fontWeight:800, color:'#0c2340',
+                  letterSpacing:'0.3px', margin:'0 0 12px',
+                }}>
+                  {titleText} Assessment
+                </h3>
 
-              <p style={{ fontSize: '12px', color: '#334155', margin: '0 0 3px' }}>
-                has successfully qualified in the
-              </p>
+                {/* Score pill */}
+                <div style={{
+                  display:'inline-flex', alignItems:'center', gap:'14px',
+                  padding:'5px 22px', borderRadius:'999px',
+                  background:'rgba(255,255,255,0.85)',
+                  border:'1.5px solid #d1d5db',
+                  fontSize:'11.5px', fontWeight:700, color:'#0c2340',
+                  marginBottom:'10px',
+                  boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+                }}>
+                  <span>
+                    Assessment Score:{' '}
+                    <strong style={{ color:'#0284c7' }}>
+                      {Math.round(data.percentage)}%
+                    </strong>
+                  </span>
+                  <span style={{ color:'#d1d5db', fontWeight:400 }}>|</span>
+                  <span>
+                    Minimum Qualifying Score:{' '}
+                    <strong>{qualifyingText}</strong>
+                  </span>
+                </div>
 
-              {/* ── 6. ASSESSMENT NAME ── */}
-              <h3 style={{
-                fontSize: '15px',
-                fontWeight: 800,
-                color: '#0c2340',
-                margin: '0 0 14px',
-                letterSpacing: '0.3px',
-              }}>
-                {(data.paperTitle || 'Industrial Automation Aptitude')} Assessment
-              </h3>
-
-              {/* ── 7. SCORE BADGE ── */}
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '6px 22px',
-                borderRadius: '999px',
-                background: '#f8fafc',
-                border: '1.5px solid #cbd5e1',
-                fontSize: '12px',
-                fontWeight: 700,
-                color: '#0c2340',
-                marginBottom: '12px',
-              }}>
-                <span>
-                  Assessment Score:{' '}
-                  <strong style={{ color: '#0284c7' }}>
-                    {Math.round(data.percentage)}%
-                  </strong>
-                </span>
-                <span style={{ color: '#94a3b8', fontWeight: 400 }}>|</span>
-                <span>
-                  Minimum Qualifying Score:{' '}
-                  <strong>{qualifyingText}</strong>
-                </span>
+                {/* Disclaimer */}
+                <p style={{
+                  fontSize:'9px', color:'#94a3b8', lineHeight:1.55,
+                  maxWidth:'560px', margin:0,
+                }}>
+                  This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit.{' '}
+                  It does not represent completion of the full training program.
+                </p>
               </div>
 
-              {/* ── 8. DISCLAIMER ── */}
-              <p style={{
-                fontSize: '9.5px',
-                color: '#64748b',
-                lineHeight: 1.55,
-                maxWidth: '560px',
-                margin: '0 auto 22px',
-              }}>
-                This certificate recognizes technical aptitude and eligibility for the A5A Automation
-                Training Academy course admission benefit. It does not represent completion of the full
-                training program.
-              </p>
-
-              {/* ── 9. FOOTER ROW ── */}
+              {/* ── FOOTER: Credential | Seal | Date ── */}
               <div style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-between',
+                width:'100%',
+                display:'flex', alignItems:'center', justifyContent:'space-between',
               }}>
-                {/* Left: Credential ID */}
-                <div style={{ textAlign: 'left', minWidth: '140px' }}>
-                  <p style={{ fontSize: '9px', fontWeight: 700, color: '#0c2340', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px' }}>
-                    Credential ID:
+                {/* Credential ID */}
+                <div style={{ textAlign:'left' }}>
+                  <p style={{
+                    fontSize:'8px', fontWeight:700, color:'#64748b',
+                    textTransform:'uppercase', letterSpacing:'1.5px',
+                    margin:'0 0 2px',
+                  }}>
+                    Credential ID
                   </p>
-                  <p style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, color: '#475569', margin: '0 0 2px' }}>
+                  <p style={{
+                    fontFamily:'monospace', fontSize:'10px', fontWeight:700,
+                    color:'#0c2340', margin:'0 0 2px',
+                  }}>
                     {certId}
                   </p>
-                  <p style={{ fontSize: '8.5px', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <CheckCircle2 style={{ width: '10px', height: '10px', display: 'inline' }} />
-                    Verified Academy Record
+                  <p style={{ fontSize:'8px', color:'#16a34a', fontWeight:600, margin:0 }}>
+                    ✓ Verified Academy Record
                   </p>
                 </div>
 
-                {/* Center: Laurel Seal */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* Laurel Seal */}
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/a5a-laurel-seal.png"
                     alt="A5A Official Seal"
-                    style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
+                    style={{ height:'76px', width:'auto', objectFit:'contain' }}
                   />
                 </div>
 
-                {/* Right: Date */}
-                <div style={{ textAlign: 'right', minWidth: '140px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 600, color: '#0c2340', margin: 0 }}>
-                    Date of Assessment:
+                {/* Date */}
+                <div style={{ textAlign:'right' }}>
+                  <p style={{ fontSize:'10px', fontWeight:600, color:'#475569', margin:'0 0 2px' }}>
+                    Date of Assessment
                   </p>
-                  <p style={{ fontSize: '12px', fontWeight: 800, color: '#0c2340', margin: 0 }}>
+                  <p style={{ fontSize:'13px', fontWeight:800, color:'#0c2340', margin:0 }}>
                     {formattedDate}
                   </p>
                 </div>
@@ -316,29 +335,19 @@ export default function CertificateModal({ data, onClose }: Props) {
             </div>{/* end content */}
           </div>{/* end certificate */}
         </div>{/* end scroll area */}
-      </div>{/* end container */}
+      </div>{/* end modal */}
 
-      {/* Print styles */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
-
         @page { size: A4 landscape; margin: 0; }
         @media print {
-          html, body {
-            background: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
+          html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
           body * { visibility: hidden !important; }
           #printable-certificate,
           #printable-certificate * { visibility: visible !important; }
           #printable-certificate {
-            position: fixed !important;
-            inset: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            position: fixed !important; inset: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            margin: 0 !important; padding: 0 !important;
             box-shadow: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
