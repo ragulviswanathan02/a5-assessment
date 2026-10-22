@@ -12,6 +12,12 @@ CREATE TABLE IF NOT EXISTS public.papers (
     is_active BOOLEAN DEFAULT false,
     show_results_immediately BOOLEAN DEFAULT true,
     track_tab_switches BOOLEAN DEFAULT true,
+    certificate_enabled BOOLEAN DEFAULT false,
+    certificate_min_marks NUMERIC DEFAULT 10,
+    certificate_min_percentage NUMERIC DEFAULT 60,
+    certificate_title TEXT DEFAULT 'Industrial Automation Skill Training Program',
+    certificate_signatory TEXT DEFAULT 'Director',
+    certificate_signatory_title TEXT DEFAULT 'A5 Automation',
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -62,8 +68,23 @@ CREATE TABLE IF NOT EXISTS public.submissions (
     topic_scores JSONB DEFAULT '{}'::jsonb,
     tab_switch_count INTEGER DEFAULT 0,
     time_taken_seconds INTEGER DEFAULT 0,
+    certificate_issued BOOLEAN DEFAULT false,
+    certificate_id TEXT,
     submitted_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- ========================================================
+-- OPTIONAL MIGRATION FOR EXISTING DATABASES:
+-- Run these if your tables are already created:
+-- ========================================================
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_enabled BOOLEAN DEFAULT false;
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_min_marks NUMERIC DEFAULT 10;
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_min_percentage NUMERIC DEFAULT 60;
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_title TEXT DEFAULT 'Industrial Automation Skill Training Program';
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_signatory TEXT DEFAULT 'Director';
+-- ALTER TABLE public.papers ADD COLUMN IF NOT EXISTS certificate_signatory_title TEXT DEFAULT 'A5 Automation';
+-- ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS certificate_issued BOOLEAN DEFAULT false;
+-- ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS certificate_id TEXT;
 
 -- 5. Create Admins Authentication Table
 CREATE TABLE IF NOT EXISTS public.admins (

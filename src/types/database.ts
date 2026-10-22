@@ -37,6 +37,13 @@ export interface Paper {
   is_active: boolean;
   show_results_immediately: boolean;
   track_tab_switches: boolean;
+  // Certificate Settings
+  certificate_enabled?: boolean;
+  certificate_min_marks?: number;
+  certificate_min_percentage?: number;
+  certificate_title?: string;
+  certificate_signatory?: string;
+  certificate_signatory_title?: string;
   created_at?: string;
   updated_at?: string;
   form_fields?: FormField[];
@@ -68,6 +75,8 @@ export interface Submission {
   topic_scores: Record<string, TopicScore>;
   tab_switch_count: number;
   time_taken_seconds: number;
+  certificate_issued?: boolean;
+  certificate_id?: string;
   submitted_at: string;
   paper?: Paper;
 }

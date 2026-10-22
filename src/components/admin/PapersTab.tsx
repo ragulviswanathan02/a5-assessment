@@ -9,6 +9,10 @@ import {
   Clock,
   Trash2,
   Loader2,
+  Award,
+  Pencil,
+  Settings2,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface Props {
@@ -17,17 +21,85 @@ interface Props {
   onSelectPaper: (id: string) => void;
 }
 
+// Helper to extract certificate config from paper
+function getPaperCert(p: Paper) {
+  let cert = {
+    enabled: !!p.certificate_enabled,
+    minMarks: Number(p.certificate_min_marks) || 10,
+    minPercentage: Number(p.certificate_min_percentage) || 60,
+    title: p.certificate_title || p.title || 'Industrial Automation Skill Training Program',
+    signatory: p.certificate_signatory || 'Director',
+    signatoryTitle: p.certificate_signatory_title || 'A5 Automation',
+  };
+
+  if (p.description && p.description.includes('[CERT_CFG:')) {
+    try {
+      const match = p.description.match(/\[CERT_CFG:(.*?)\]/);
+      if (match && match[1]) {
+        cert = { ...cert, ...JSON.parse(match[1]) };
+      }
+    } catch (e) {}
+  }
+  return cert;
+}
+
 export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPaper, setEditingPaper] = useState<Paper | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
 
-  // New Paper Form State
+  // Paper Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [showResultsImmediately, setShowResultsImmediately] = useState(true);
   const [trackTabSwitches, setTrackTabSwitches] = useState(true);
+
+  // Certificate Form State
+  const [certificateEnabled, setCertificateEnabled] = useState(false);
+  const [certificateMinMarks, setCertificateMinMarks] = useState(10);
+  const [certificateMinPercentage, setCertificateMinPercentage] = useState(60);
+  const [certificateTitle, setCertificateTitle] = useState('');
+  const [certificateSignatory, setCertificateSignatory] = useState('Director');
+  const [certificateSignatoryTitle, setCertificateSignatoryTitle] = useState('A5 Automation');
+
+  // Open Create Modal
+  const handleOpenCreate = () => {
+    setEditingPaper(null);
+    setTitle('');
+    setDescription('');
+    setDurationMinutes(30);
+    setShowResultsImmediately(true);
+    setTrackTabSwitches(true);
+    setCertificateEnabled(false);
+    setCertificateMinMarks(10);
+    setCertificateMinPercentage(60);
+    setCertificateTitle('');
+    setCertificateSignatory('Director');
+    setCertificateSignatoryTitle('A5 Automation');
+    setShowCreateModal(true);
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (p: Paper) => {
+    setEditingPaper(p);
+    setTitle(p.title);
+    setDescription((p.description || '').replace(/\[CERT_CFG:[\s\S]*?\]/, '').trim());
+    setDurationMinutes(p.duration_minutes ?? 30);
+    setShowResultsImmediately(p.show_results_immediately ?? true);
+    setTrackTabSwitches(p.track_tab_switches ?? true);
+
+    const c = getPaperCert(p);
+    setCertificateEnabled(c.enabled);
+    setCertificateMinMarks(c.minMarks);
+    setCertificateMinPercentage(c.minPercentage);
+    setCertificateTitle(c.title);
+    setCertificateSignatory(c.signatory);
+    setCertificateSignatoryTitle(c.signatoryTitle);
+
+    setShowCreateModal(true);
+  };
 
   // Set Paper as Active / Live
   const handleSetActive = async (paperId: string) => {
@@ -57,40 +129,57 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  // Create Paper
-  const handleCreatePaper = async (e: React.FormEvent) => {
+  // Save Paper (Create or Update)
+  const handleSavePaper = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
     try {
       setLoadingAction(true);
-      const isFirst = papers.length === 0;
 
-      const res = await fetch('/api/admin/papers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim(),
-          durationMinutes: Number(durationMinutes) || 0,
-          isActive: isFirst,
-          showResultsImmediately,
-          trackTabSwitches,
-        }),
-      });
+      const payload = {
+        title: title.trim(),
+        description: description.trim(),
+        durationMinutes: Number(durationMinutes) || 0,
+        showResultsImmediately,
+        trackTabSwitches,
+        certificateEnabled,
+        certificateMinMarks: Number(certificateMinMarks) || 0,
+        certificateMinPercentage: Number(certificateMinPercentage) || 0,
+        certificateTitle: certificateTitle.trim() || title.trim(),
+        certificateSignatory: certificateSignatory.trim() || 'Director',
+        certificateSignatoryTitle: certificateSignatoryTitle.trim() || 'A5 Automation',
+      };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create paper');
+      if (editingPaper) {
+        // UPDATE
+        const res = await fetch('/api/admin/papers', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingPaper.id, ...payload }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update paper');
+      } else {
+        // CREATE
+        const isFirst = papers.length === 0;
+        const res = await fetch('/api/admin/papers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, isActive: isFirst }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create paper');
+
+        if (data.data?.id) {
+          onSelectPaper(data.data.id);
+        }
+      }
 
       setShowCreateModal(false);
-      setTitle('');
-      setDescription('');
       onRefresh();
-      if (data.data?.id) {
-        onSelectPaper(data.data.id);
-      }
     } catch (err: any) {
-      alert('Failed to create paper: ' + err.message);
+      alert('Failed to save paper: ' + err.message);
     } finally {
       setLoadingAction(false);
     }
@@ -121,12 +210,12 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
         <div>
           <h2 className="text-base font-bold text-slate-900">Question Papers Manager</h2>
           <p className="text-xs text-slate-500">
-            Create assessment papers, set the live test for students, or copy unique links for your institute website.
+            Create assessment papers, set the live test, configure certificates, or copy links for your website.
           </p>
         </div>
 
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleOpenCreate}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold shadow-xs cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
@@ -138,6 +227,8 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {papers.map((paper) => {
           const isCopied = copiedId === paper.id;
+          const cert = getPaperCert(paper);
+          const cleanDesc = (paper.description || '').replace(/\[CERT_CFG:[\s\S]*?\]/, '').trim();
 
           return (
             <div
@@ -162,17 +253,28 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                     </span>
                   )}
 
-                  <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {paper.duration_minutes > 0 ? `${paper.duration_minutes}m` : 'Untimed'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {cert.enabled ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[11px] font-semibold border border-amber-200">
+                        <Award className="w-3 h-3 text-amber-600" />
+                        <span>≥ {cert.minMarks}m</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-400">No Cert</span>
+                    )}
+
+                    <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {paper.duration_minutes > 0 ? `${paper.duration_minutes}m` : 'Untimed'}
+                    </span>
+                  </div>
                 </div>
 
                 <h3 className="text-base font-bold text-slate-900 mb-1.5 line-clamp-1">
                   {paper.title}
                 </h3>
                 <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">
-                  {paper.description || 'No description provided.'}
+                  {cleanDesc || 'No description provided.'}
                 </p>
 
                 {/* Direct Link Box for Institute Website */}
@@ -204,11 +306,20 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
 
               {/* Action Buttons */}
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <button
+                  onClick={() => handleOpenEdit(paper)}
+                  className="py-1.5 px-2.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Edit Paper & Certificate Settings"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+
                 {!paper.is_active ? (
                   <button
                     onClick={() => handleSetActive(paper.id)}
                     disabled={loadingAction}
-                    className="flex-1 py-1.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-all cursor-pointer"
+                    className="flex-1 py-1.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-all cursor-pointer text-center"
                   >
                     Set as Live Test
                   </button>
@@ -232,12 +343,17 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
         })}
       </div>
 
-      {/* Create Paper Modal */}
+      {/* Create / Edit Paper Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
-              <h3 className="font-bold text-slate-900 text-base">Create New Question Paper</h3>
+              <div className="flex items-center gap-2">
+                <Settings2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  {editingPaper ? 'Edit Paper & Certificate Settings' : 'Create New Question Paper'}
+                </h3>
+              </div>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer"
@@ -246,7 +362,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
               </button>
             </div>
 
-            <form onSubmit={handleCreatePaper} className="space-y-4 text-xs md:text-sm">
+            <form onSubmit={handleSavePaper} className="space-y-4 text-xs md:text-sm">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
                   Paper Title <span className="text-rose-500">*</span>
@@ -254,7 +370,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. TCS NQT Mock Test 2026 / Python Proficiency"
+                  placeholder="e.g. Industrial Automation Skills Assessment"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
@@ -264,64 +380,175 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Instructions / Description</label>
                 <textarea
-                  rows={3}
-                  placeholder="Provide instructions to students..."
+                  rows={2}
+                  placeholder="Instructions shown to candidates before starting..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Duration (Minutes) <span className="text-slate-400 font-normal">(0 for unlimited)</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Duration (Minutes) <span className="text-slate-400 font-normal">(0 for unlimited)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  />
+                </div>
+
+                <div className="pt-2 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={showResultsImmediately}
+                      onChange={(e) => setShowResultsImmediately(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600"
+                    />
+                    <span className="text-slate-700 font-medium">Show immediate score</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={trackTabSwitches}
+                      onChange={(e) => setTrackTabSwitches(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600"
+                    />
+                    <span className="text-slate-700 font-medium">Track anti-cheat tab switches</span>
+                  </label>
+                </div>
               </div>
 
-              <div className="pt-2 space-y-2 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showResultsImmediately}
-                    onChange={(e) => setShowResultsImmediately(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo-600"
-                  />
-                  <span className="text-slate-700 font-medium">Show score & topic breakdown immediately to student upon submit</span>
-                </label>
+              {/* ================= CERTIFICATE SETTINGS CARD ================= */}
+              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-yellow-500/5 border border-amber-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-amber-600" />
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-xs md:text-sm">
+                        Certificate of Qualification
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Award verified credentials with MSME, ISO, and A5 logos
+                      </p>
+                    </div>
+                  </div>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={trackTabSwitches}
-                    onChange={(e) => setTrackTabSwitches(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo-600"
-                  />
-                  <span className="text-slate-700 font-medium">Track tab switching & anti-cheat warnings</span>
-                </label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={certificateEnabled}
+                      onChange={(e) => setCertificateEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600" />
+                  </label>
+                </div>
+
+                {certificateEnabled && (
+                  <div className="space-y-3 pt-3 border-t border-amber-200/80">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Minimum Marks Cutoff (e.g. 10)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={certificateMinMarks}
+                          onChange={(e) => setCertificateMinMarks(Number(e.target.value))}
+                          placeholder="10"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Minimum Percentage Cutoff (%)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={certificateMinPercentage}
+                          onChange={(e) => setCertificateMinPercentage(Number(e.target.value))}
+                          placeholder="60"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Certificate Program / Training Course Title
+                      </label>
+                      <input
+                        type="text"
+                        value={certificateTitle}
+                        onChange={(e) => setCertificateTitle(e.target.value)}
+                        placeholder={title || 'Industrial Automation Skill Training Program'}
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Authorized Signatory Name
+                        </label>
+                        <input
+                          type="text"
+                          value={certificateSignatory}
+                          onChange={(e) => setCertificateSignatory(e.target.value)}
+                          placeholder="Director / Head of Training"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Signatory Organization
+                        </label>
+                        <input
+                          type="text"
+                          value={certificateSignatoryTitle}
+                          onChange={(e) => setCertificateSignatoryTitle(e.target.value)}
+                          placeholder="A5 Automation"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-amber-100/60 p-2.5 rounded-lg text-[11px] text-amber-900 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span>
+                        Students who score ≥ {certificateMinMarks} marks can view and download their verified certificate with MSME &amp; ISO 9001:2015 accreditations.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer text-xs font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loadingAction}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs shadow-xs"
                 >
                   {loadingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{loadingAction ? 'Creating...' : 'Create Paper'}</span>
+                  <span>{loadingAction ? 'Saving...' : editingPaper ? 'Save Changes' : 'Create Paper'}</span>
                 </button>
               </div>
             </form>

@@ -171,7 +171,7 @@ function AssessmentApp() {
         {step === 'register' && (
           <RegistrationForm
             title={paper.title}
-            description={paper.description}
+            description={(paper.description || '').replace(/\[CERT_CFG:[\s\S]*?\]/, '').trim()}
             durationMinutes={paper.duration_minutes}
             questionCount={questions.length}
             formFields={formFields}
@@ -197,6 +197,12 @@ function AssessmentApp() {
               studentData.name ||
               Object.values(studentData)[0] ||
               'Student'
+            }
+            studentCollege={
+              studentData.college ||
+              studentData.college_name ||
+              studentData.institution ||
+              ''
             }
             showResultsImmediately={paper.show_results_immediately}
             result={submissionResult}

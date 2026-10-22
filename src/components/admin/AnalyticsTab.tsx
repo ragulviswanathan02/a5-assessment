@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Paper, Submission } from '@/types/database';
+import CertificateModal, { CertificateData } from '@/components/certificate/CertificateModal';
 import {
   BarChart,
   Bar,
@@ -26,6 +27,8 @@ import {
   XCircle,
   HelpCircle,
   TrendingUp,
+  Printer,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface Props {
@@ -33,6 +36,36 @@ interface Props {
   selectedPaperId: string;
   onSelectPaperId: (id: string) => void;
   submissions: Submission[];
+}
+
+function getPaperCert(p?: Paper) {
+  if (!p) {
+    return {
+      enabled: false,
+      minMarks: 10,
+      minPercentage: 60,
+      title: 'Industrial Automation Skill Training Program',
+      signatory: 'Director',
+      signatoryTitle: 'A5 Automation',
+    };
+  }
+  let cert = {
+    enabled: !!p.certificate_enabled,
+    minMarks: Number(p.certificate_min_marks) || 10,
+    minPercentage: Number(p.certificate_min_percentage) || 60,
+    title: p.certificate_title || p.title || 'Industrial Automation Skill Training Program',
+    signatory: p.certificate_signatory || 'Director',
+    signatoryTitle: p.certificate_signatory_title || 'A5 Automation',
+  };
+  if (p.description && p.description.includes('[CERT_CFG:')) {
+    try {
+      const match = p.description.match(/\[CERT_CFG:(.*?)\]/);
+      if (match && match[1]) {
+        cert = { ...cert, ...JSON.parse(match[1]) };
+      }
+    } catch (e) {}
+  }
+  return cert;
 }
 
 export default function AnalyticsTab({
@@ -43,6 +76,10 @@ export default function AnalyticsTab({
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [inspectSubmission, setInspectSubmission] = useState<Submission | null>(null);
+  const [activeCertData, setActiveCertData] = useState<CertificateData | null>(null);
+
+  const currentPaper = papers.find((p) => p.id === selectedPaperId);
+  const currentCert = useMemo(() => getPaperCert(currentPaper), [currentPaper]);
 
   // Filter submissions by current paper
   const filteredSubmissions = useMemo(() => {
@@ -142,6 +179,10 @@ export default function AnalyticsTab({
     }
 
     const rows = filteredSubmissions.map((sub, index) => {
+      const certInfo = (sub.student_data as any)?._certificate;
+      const isEligible = certInfo?.issued || sub.certificate_issued || (currentCert.enabled && sub.total_score >= currentCert.minMarks);
+      const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : 'N/A');
+
       const base: Record<string, any> = {
         'Rank': index + 1,
         'Student Name': sub.student_name,
@@ -151,6 +192,8 @@ export default function AnalyticsTab({
         'Total Score': sub.total_score,
         'Max Score': sub.max_score,
         'Percentage (%)': sub.percentage,
+        'Certificate Status': isEligible ? 'Qualified' : currentCert.enabled ? 'Below Cutoff' : 'Not Configured',
+        'Certificate ID': isEligible ? certId : 'N/A',
         'Tab Switches': sub.tab_switch_count,
         'Time Taken (seconds)': sub.time_taken_seconds,
         'Submitted At': new Date(sub.submitted_at).toLocaleString(),
@@ -159,7 +202,7 @@ export default function AnalyticsTab({
       // Add dynamic student form data
       if (sub.student_data) {
         Object.entries(sub.student_data).forEach(([key, val]) => {
-          if (!['full_name', 'email', 'phone', 'college'].includes(key)) {
+          if (!['full_name', 'email', 'phone', 'college', '_certificate'].includes(key)) {
             base[`Field: ${key}`] = val;
           }
         });
@@ -366,65 +409,109 @@ export default function AnalyticsTab({
                 <th className="py-2.5 px-3">Contact</th>
                 <th className="py-2.5 px-3 text-center">Score</th>
                 <th className="py-2.5 px-3 text-center">Percentage</th>
+                <th className="py-2.5 px-3 text-center">Certificate</th>
                 <th className="py-2.5 px-3 text-center">Tab Switches</th>
                 <th className="py-2.5 px-3">Date</th>
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {searchedSubmissions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-3 font-medium text-slate-900">{sub.student_name}</td>
-                  <td className="py-3 px-3 text-slate-600 max-w-xs truncate">
-                    {sub.student_college || '—'}
-                  </td>
-                  <td className="py-3 px-3 text-slate-500">
-                    <div>{sub.student_phone || '—'}</div>
-                    <div className="text-[11px] text-slate-400">{sub.student_email || '—'}</div>
-                  </td>
-                  <td className="py-3 px-3 text-center font-bold text-slate-900">
-                    {sub.total_score} / {sub.max_score}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
-                        sub.percentage >= 75
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : sub.percentage >= 40
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'bg-rose-50 text-rose-700'
-                      }`}
-                    >
-                      {sub.percentage}%
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    {sub.tab_switch_count > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
-                        <AlertTriangle className="w-3 h-3" />
-                        {sub.tab_switch_count}
+              {searchedSubmissions.map((sub) => {
+                const certInfo = (sub.student_data as any)?._certificate;
+                const isEligible = certInfo?.issued || sub.certificate_issued || (currentCert.enabled && sub.total_score >= currentCert.minMarks);
+                const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : '');
+
+                return (
+                  <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3 font-medium text-slate-900">{sub.student_name}</td>
+                    <td className="py-3 px-3 text-slate-600 max-w-xs truncate">
+                      {sub.student_college || '—'}
+                    </td>
+                    <td className="py-3 px-3 text-slate-500">
+                      <div>{sub.student_phone || '—'}</div>
+                      <div className="text-[11px] text-slate-400">{sub.student_email || '—'}</div>
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-slate-900">
+                      {sub.total_score} / {sub.max_score}
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
+                          sub.percentage >= 75
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : sub.percentage >= 40
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'bg-rose-50 text-rose-700'
+                        }`}
+                      >
+                        {sub.percentage}%
                       </span>
-                    ) : (
-                      <span className="text-slate-400">0</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
-                    {new Date(sub.submitted_at).toLocaleDateString()}
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={() => setInspectSubmission(sub)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Details</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      {isEligible ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold border border-amber-200">
+                          <Award className="w-3 h-3 text-amber-600" />
+                          <span>Qualified</span>
+                        </span>
+                      ) : currentCert.enabled ? (
+                        <span className="text-[11px] text-slate-400">Below Cutoff</span>
+                      ) : (
+                        <span className="text-[11px] text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      {sub.tab_switch_count > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+                          <AlertTriangle className="w-3 h-3" />
+                          {sub.tab_switch_count}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
+                      {new Date(sub.submitted_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {isEligible && (
+                          <button
+                            onClick={() =>
+                              setActiveCertData({
+                                id: certId,
+                                studentName: sub.student_name,
+                                studentCollege: sub.student_college,
+                                paperTitle: currentCert.title,
+                                score: sub.total_score,
+                                maxScore: sub.max_score,
+                                percentage: sub.percentage,
+                                issueDate: sub.submitted_at,
+                                signatory: currentCert.signatory,
+                                signatoryTitle: currentCert.signatoryTitle,
+                              })
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors text-xs font-semibold cursor-pointer"
+                            title="View & Print Official Certificate"
+                          >
+                            <Award className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Cert</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setInspectSubmission(sub)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Details</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {searchedSubmissions.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
                     No matching student records found.
                   </td>
                 </tr>
@@ -530,6 +617,14 @@ export default function AnalyticsTab({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Certificate Preview & Print Modal */}
+      {activeCertData && (
+        <CertificateModal
+          data={activeCertData}
+          onClose={() => setActiveCertData(null)}
+        />
       )}
     </div>
   );

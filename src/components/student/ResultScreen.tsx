@@ -1,18 +1,36 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { CheckCircle, Award, BarChart3, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, Award, BarChart3, Clock, AlertCircle, Printer, Download, ShieldCheck } from 'lucide-react';
+import CertificateModal from '@/components/certificate/CertificateModal';
 
 interface Props {
   paperTitle: string;
   studentName: string;
+  studentCollege?: string;
   showResultsImmediately: boolean;
   result?: {
     totalScore: number;
     maxScore: number;
     percentage: number;
     topicScores: Record<string, { scored: number; total: number; percentage: number }>;
+    certificate?: {
+      issued: boolean;
+      id?: string;
+      studentName?: string;
+      studentCollege?: string;
+      paperTitle?: string;
+      score?: number;
+      maxScore?: number;
+      percentage?: number;
+      issueDate?: string;
+      signatory?: string;
+      signatoryTitle?: string;
+      minMarks?: number;
+      minPercentage?: number;
+      enabled?: boolean;
+    } | null;
   } | null;
   onReset?: () => void;
 }
@@ -20,10 +38,13 @@ interface Props {
 export default function ResultScreen({
   paperTitle,
   studentName,
+  studentCollege,
   showResultsImmediately,
   result,
   onReset,
 }: Props) {
+  const [showCertModal, setShowCertModal] = useState(false);
+
   useEffect(() => {
     // Launch celebratory confetti burst
     try {
@@ -36,6 +57,9 @@ export default function ResultScreen({
       // ignore
     }
   }, []);
+
+  const certData = result?.certificate;
+  const isCertQualified = !!certData && certData.issued;
 
   return (
     <div className="max-w-2xl mx-auto my-10 px-4">
@@ -51,6 +75,36 @@ export default function ResultScreen({
         <p className="text-slate-600 text-sm md:text-base max-w-md mx-auto mb-6">
           Thank you, <span className="font-semibold text-slate-800">{studentName}</span>. Your test submission for <span className="font-medium text-slate-800">{paperTitle}</span> has been securely recorded.
         </p>
+
+        {/* Certificate Unlocked Golden Card */}
+        {isCertQualified && (
+          <div className="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-yellow-500/10 border-2 border-amber-300 rounded-2xl p-5 text-center shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-2 shadow-xs">
+              <Award className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">Certificate of Qualification Unlocked!</h3>
+            <p className="text-xs text-slate-600 mt-1 max-w-md mx-auto leading-relaxed">
+              Congratulations! You have satisfied the qualification criteria for this assessment. Your official credential has been generated.
+            </p>
+            <button
+              onClick={() => setShowCertModal(true)}
+              className="mt-3.5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md cursor-pointer transition-all active:scale-95"
+            >
+              <Printer className="w-4 h-4" />
+              <span>View &amp; Download Certificate</span>
+            </button>
+          </div>
+        )}
+
+        {/* Not Qualified Notice (if paper had certificate enabled but score below cutoff) */}
+        {certData && !certData.issued && certData.enabled && (
+          <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-center text-xs text-slate-600 flex items-center justify-center gap-2">
+            <Award className="w-4 h-4 text-slate-400 shrink-0" />
+            <span>
+              Certificate passing cutoff is <strong>{certData.minMarks} marks</strong> ({certData.minPercentage}%). You scored {result?.totalScore} marks.
+            </span>
+          </div>
+        )}
 
         {showResultsImmediately && result ? (
           <div className="space-y-6 text-left">
@@ -130,6 +184,25 @@ export default function ResultScreen({
           )}
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      {showCertModal && certData && (
+        <CertificateModal
+          data={{
+            id: certData.id,
+            studentName: certData.studentName || studentName,
+            studentCollege: certData.studentCollege || studentCollege,
+            paperTitle: certData.paperTitle || paperTitle,
+            score: certData.score ?? result?.totalScore ?? 0,
+            maxScore: certData.maxScore ?? result?.maxScore ?? 0,
+            percentage: certData.percentage ?? result?.percentage ?? 0,
+            issueDate: certData.issueDate,
+            signatory: certData.signatory,
+            signatoryTitle: certData.signatoryTitle,
+          }}
+          onClose={() => setShowCertModal(false)}
+        />
+      )}
     </div>
   );
 }

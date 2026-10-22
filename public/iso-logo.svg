@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4af37"/>
+      <stop offset="50%" stop-color="#aa771c"/>
+      <stop offset="100%" stop-color="#805a14"/>
+    </linearGradient>
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&amp;display=swap');
+    text { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  </style>
+
+  <!-- Outer Starburst / Dual Ring -->
+  <circle cx="80" cy="80" r="76" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+  <circle cx="80" cy="80" r="71" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+  <circle cx="80" cy="80" r="66" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- Top Curved / Banner Text -->
+  <text x="80" y="38" fill="#b45309" font-size="9" font-weight="900" text-anchor="middle" letter-spacing="2">CERTIFIED</text>
+
+  <!-- Big Bold ISO -->
+  <text x="80" y="74" fill="#0f172a" font-size="32" font-weight="900" text-anchor="middle" letter-spacing="1">ISO</text>
+  <text x="80" y="96" fill="#b45309" font-size="16" font-weight="900" text-anchor="middle" letter-spacing="0.5">9001:2015</text>
+
+  <!-- Laurel Leaves (Left & Right) -->
+  <path d="M 32 75 C 30 88 35 102 46 112 C 40 102 38 90 40 78 Z" fill="url(#goldGrad)"/>
+  <path d="M 128 75 C 130 88 125 102 114 112 C 120 102 122 90 120 78 Z" fill="url(#goldGrad)"/>
+
+  <!-- Bottom Subtitle -->
+  <text x="80" y="118" fill="#475569" font-size="8" font-weight="800" text-anchor="middle" letter-spacing="1">QUALITY MANAGEMENT</text>
+  <text x="80" y="129" fill="#0f172a" font-size="7.5" font-weight="800" text-anchor="middle" letter-spacing="0.8">SYSTEM</text>
+</svg>
