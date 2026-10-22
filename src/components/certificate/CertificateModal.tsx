@@ -28,7 +28,6 @@ function formatDisplayName(name: string): string {
     .trim()
     .split(/\s+/)
     .map(part => {
-      // If it's a single initial (like "V" in "Ragul V"), keep it uppercase
       if (part.length === 1) return part.toUpperCase();
       return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
     })
@@ -69,12 +68,12 @@ export default function CertificateModal({ data, onClose }: Props) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Pinyon+Script&family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap"
       />
 
       {/* Modal shell */}
       <div style={{
-        width: '100%', maxWidth: '1000px',
+        width: '100%', maxWidth: '1080px',
         background: '#fff',
         borderRadius: '16px',
         overflow: 'hidden',
@@ -128,189 +127,190 @@ export default function CertificateModal({ data, onClose }: Props) {
           flex: 1, overflowY: 'auto',
           background: '#1e293b',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '32px',
+          padding: '24px',
         }}>
 
-          {/* ══════════════════════════════════════════
-              CERTIFICATE  950 × 670 px
-              Zero-overlap, professional layout
-          ══════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════════════════════
+              CERTIFICATE: 1024 × 679 px
+              Using authentic high-res 3D metallic ribbon artwork base
+          ══════════════════════════════════════════════════════════ */}
           <div
             id="printable-certificate"
             ref={certRef}
             style={{
-              width: '950px',
-              height: '670px',
+              width: '1024px',
+              height: '679px',
               position: 'relative',
-              background: 'linear-gradient(160deg,#ffffff 0%,#fcfbfa 50%,#fbf9f5 100%)',
-              overflow: 'hidden',
+              backgroundImage: "url('/a5a-certificate-base.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
               fontFamily: "'Montserrat','Segoe UI',sans-serif",
-              color: '#1a2b4a',
+              color: '#0c2340',
               flexShrink: 0,
+              boxShadow: '0 25px 60px rgba(0,0,0,0.45)',
+              boxSizing: 'border-box',
             }}
           >
-            {/* ─── Layered crisp triangle corners (Navy / Gold / Background) ─── */}
-            {/* Top-Left */}
-            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'115px 115px 0 0',borderColor:'#0c2340 transparent transparent transparent',zIndex:1 }} />
-            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'100px 100px 0 0',borderColor:'#b8962e transparent transparent transparent',zIndex:2 }} />
-            <div style={{ position:'absolute',top:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'80px 80px 0 0',borderColor:'#fbf9f5 transparent transparent transparent',zIndex:3 }} />
-
-            {/* Top-Right */}
-            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 115px 115px 0',borderColor:'transparent #0c2340 transparent transparent',zIndex:1 }} />
-            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 100px 100px 0',borderColor:'transparent #b8962e transparent transparent',zIndex:2 }} />
-            <div style={{ position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 80px 80px 0',borderColor:'transparent #fbf9f5 transparent transparent',zIndex:3 }} />
-
-            {/* Bottom-Left */}
-            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'115px 0 0 115px',borderColor:'transparent transparent transparent #0c2340',zIndex:1 }} />
-            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'100px 0 0 100px',borderColor:'transparent transparent transparent #b8962e',zIndex:2 }} />
-            <div style={{ position:'absolute',bottom:0,left:0,width:0,height:0,borderStyle:'solid',borderWidth:'80px 0 0 80px',borderColor:'transparent transparent transparent #fbf9f5',zIndex:3 }} />
-
-            {/* Bottom-Right */}
-            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 115px 115px',borderColor:'transparent transparent #0c2340 transparent',zIndex:1 }} />
-            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 100px 100px',borderColor:'transparent transparent #b8962e transparent',zIndex:2 }} />
-            <div style={{ position:'absolute',bottom:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 0 80px 80px',borderColor:'transparent transparent #fbf9f5 transparent',zIndex:3 }} />
-
-            {/* ─── Outer gold border ─── */}
-            <div style={{ position:'absolute',inset:0,border:'3px solid #c8a84b',pointerEvents:'none',zIndex:5 }} />
-            {/* ─── Inner thin gold border ─── */}
-            <div style={{ position:'absolute',inset:'12px',border:'1px solid rgba(200,168,75,0.45)',pointerEvents:'none',zIndex:5 }} />
-
-            {/* ════════════════ MAIN CONTENT ════════════════ */}
+            {/* ── Flowing Content Area (perfectly positioned below header logo and above seal) ── */}
             <div style={{
-              position:'relative', zIndex:10,
-              height:'100%',
-              display:'flex', flexDirection:'column',
-              alignItems:'center', justifyContent:'space-between',
-              textAlign:'center',
-              padding:'26px 85px 22px',
+              position: 'absolute',
+              top: '154px',
+              left: '140px',
+              right: '140px',
+              bottom: '120px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              textAlign: 'center',
             }}>
 
-              {/* ── HEADER: Logo + Certificate of Title ── */}
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/a5a-academy-logo.png"
-                  alt="A5 Automation Training Academy"
-                  style={{ height:'62px', objectFit:'contain', display:'block', margin:'0 auto 6px' }}
-                />
+              {/* Title Section */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <p style={{
-                  fontFamily:"'Cormorant Garamond','Times New Roman',serif",
-                  fontSize:'14px', fontWeight:600,
-                  letterSpacing:'5px', color:'#1a2b4a',
-                  textTransform:'uppercase', margin:'0 0 4px',
+                  fontFamily: "'Cinzel',serif",
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  letterSpacing: '5px',
+                  color: '#0c2340',
+                  textTransform: 'uppercase',
+                  margin: '0 0 4px',
                 }}>
                   Certificate of
                 </p>
                 <h1 style={{
-                  fontFamily:"'Cormorant Garamond','Times New Roman',serif",
-                  fontSize:'28px', fontWeight:700,
-                  letterSpacing:'2px', color:'#0c2340',
-                  textTransform:'uppercase', lineHeight:1.15, margin:0,
+                  fontFamily: "'Cinzel',serif",
+                  fontSize: '26px',
+                  fontWeight: 800,
+                  letterSpacing: '2px',
+                  color: '#0c2340',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.15,
+                  margin: 0,
+                  maxWidth: '650px',
                 }}>
                   {titleText}
                 </h1>
               </div>
 
-              {/* ── BODY: Recipient & Qualification details ── */}
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:'100%' }}>
+              {/* Recipient & Qualification Details */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 <p style={{
-                  fontSize:'13px', fontWeight:500, color:'#64748b',
-                  letterSpacing:'0.5px', margin:'0 0 4px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  color: '#1a2b4a',
+                  margin: '0 0 2px',
                 }}>
                   This is to certify that
                 </p>
 
-                {/* Student Name — elegant cursive script */}
+                {/* Student Name */}
                 <div style={{
-                  fontFamily:"'Alex Brush','Pinyon Script','Brush Script MT',cursive",
-                  fontSize:'54px', color:'#0c2340',
-                  fontWeight:400, lineHeight:1.1,
-                  margin:'0 0 2px',
-                  letterSpacing:'1.5px',
+                  fontFamily: "'Alex Brush',cursive",
+                  fontSize: '52px',
+                  fontWeight: 400,
+                  color: '#0c2340',
+                  lineHeight: 1.05,
+                  margin: '0 0 2px',
+                  letterSpacing: '1px',
                 }}>
                   {displayName}
                 </div>
 
                 {/* Refined Gold Underline */}
                 <div style={{
-                  width:'420px', maxWidth:'70%', height:'1.5px',
-                  background:'linear-gradient(90deg,transparent 0%,#c8a84b 25%,#f0d060 50%,#c8a84b 75%,transparent 100%)',
-                  margin:'4px auto 10px',
+                  width: '440px',
+                  maxWidth: '70%',
+                  height: '1.5px',
+                  background: 'linear-gradient(90deg, transparent 0%, #c8a84b 20%, #e5c365 50%, #c8a84b 80%, transparent 100%)',
+                  margin: '4px auto 10px',
                 }} />
 
-                <p style={{ fontSize:'14px', fontWeight:700, color:'#0c2340', margin:'0 0 3px' }}>
+                <p style={{
+                  fontSize: '13.5px',
+                  fontWeight: 700,
+                  color: '#0c2340',
+                  margin: '0 0 2px',
+                }}>
                   of {collegeText}
                 </p>
-                <p style={{ fontSize:'12.5px', color:'#475569', margin:'0 0 3px' }}>
+
+                <p style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: '#334155',
+                  margin: '0 0 2px',
+                }}>
                   has successfully qualified in the
                 </p>
+
                 <h3 style={{
-                  fontSize:'15.5px', fontWeight:800, color:'#0c2340',
-                  letterSpacing:'0.3px', margin:'0 0 10px',
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  color: '#0c2340',
+                  letterSpacing: '0.2px',
+                  margin: '0 0 8px',
                 }}>
                   {titleText} Assessment
                 </h3>
 
-                {/* Score & Qualification Display (Clean typography, no button pill) */}
+                {/* Score & Qualifying criteria */}
                 <div style={{
-                  display:'flex', alignItems:'center', justifyContent:'center', gap:'16px',
-                  fontSize:'13px', fontWeight:700, color:'#0c2340',
-                  margin:'0 0 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '16px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  color: '#0c2340',
+                  margin: '0 0 8px',
                 }}>
                   <span>
                     Assessment Score:{' '}
-                    <strong style={{ color:'#0284c7' }}>
+                    <strong style={{ color: '#0284c7' }}>
                       {Math.round(data.percentage)}%
                     </strong>
                   </span>
-                  <span style={{ color:'#cbd5e1', fontWeight:300, fontSize:'15px' }}>|</span>
+                  <span style={{ color: '#94a3b8', fontWeight: 300, fontSize: '14px' }}>|</span>
                   <span>
                     Minimum Qualifying Score:{' '}
-                    <strong style={{ color:'#0c2340' }}>{qualifyingText}</strong>
+                    <strong style={{ color: '#0c2340' }}>{qualifyingText}</strong>
                   </span>
                 </div>
 
                 {/* Academy Disclaimer */}
                 <p style={{
-                  fontSize:'9.5px', color:'#94a3b8', lineHeight:1.5,
-                  maxWidth:'580px', margin:0,
+                  fontSize: '9.5px',
+                  color: '#64748b',
+                  lineHeight: 1.45,
+                  maxWidth: '520px',
+                  margin: 0,
                 }}>
                   This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit.{' '}
                   It does not represent completion of the full training program.
                 </p>
               </div>
 
-              {/* ── FOOTER: Perfectly Balanced Laurel Seal (Center) + Date (Right) ── */}
-              <div style={{
-                width:'100%',
-                display:'flex', alignItems:'flex-end', justifyContent:'space-between',
-                padding:'0 10px 4px',
-              }}>
-                {/* Left empty spacer for optical symmetry */}
-                <div style={{ flex: 1 }} />
+            </div>
 
-                {/* Center Laurel Seal */}
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/a5a-laurel-seal.png"
-                    alt="A5A Official Seal"
-                    style={{ height:'78px', width:'auto', objectFit:'contain' }}
-                  />
-                </div>
+            {/* Date on bottom right */}
+            <p style={{
+              position: 'absolute',
+              right: '175px',
+              bottom: '50px',
+              fontSize: '11.5px',
+              fontWeight: 600,
+              color: '#334155',
+              margin: 0,
+              letterSpacing: '0.2px',
+            }}>
+              Date of Assessment: <strong style={{ color: '#0c2340', fontWeight: 700 }}>{formattedDate}</strong>
+            </p>
 
-                {/* Right Date of Assessment */}
-                <div style={{ flex: 1, textAlign:'right' }}>
-                  <p style={{ fontSize:'11.5px', fontWeight:600, color:'#475569', margin:0 }}>
-                    Date of Assessment: <strong style={{ color:'#0c2340', fontWeight:800 }}>{formattedDate}</strong>
-                  </p>
-                </div>
-              </div>
-
-            </div>{/* end content */}
           </div>{/* end certificate */}
         </div>{/* end scroll area */}
-      </div>{/* end modal */}
+      </div>{/* end modal shell */}
 
       <style jsx global>{`
         @page { size: A4 landscape; margin: 0; }
@@ -332,4 +332,3 @@ export default function CertificateModal({ data, onClose }: Props) {
     </div>
   );
 }
-
