@@ -224,9 +224,13 @@ export default function ExamInterface({
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-              A5
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/a5-company-logo.png"
+              alt="A5 Automation"
+              className="h-8 w-auto object-contain"
+            />
+            <div className="h-5 w-px bg-slate-200 hidden sm:block" />
             <div>
               <h1 className="text-sm md:text-base font-semibold text-slate-900 leading-tight line-clamp-1">
                 {paper.title}

@@ -196,9 +196,13 @@ export default function AdminDashboardPage() {
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 shadow-2xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-              <Shield className="w-5 h-5" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/a5-company-logo.png"
+              alt="A5 Automation"
+              className="h-9 w-auto object-contain"
+            />
+            <div className="h-6 w-px bg-slate-200" />
             <div>
               <h1 className="text-base font-bold text-slate-900 leading-tight">Admin Console</h1>
               <p className="text-xs text-slate-500">Assessment & Registration Control Hub</p>

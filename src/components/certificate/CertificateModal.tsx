@@ -89,8 +89,13 @@ export default function CertificateModal({ data, onClose }: Props) {
           background: '#0c2340',
           color: '#fff', flexShrink: 0,
         }} className="print:hidden">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award style={{ width: 16, height: 16, color: '#fbbf24' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/a5-company-logo.png"
+              alt="A5 Automation"
+              style={{ height: '20px', width: 'auto', objectFit: 'contain' }}
+            />
             <span style={{ fontWeight: 700, fontSize: '13px', fontFamily: 'Montserrat,sans-serif', letterSpacing: '0.5px' }}>
               Official Academy Certificate
             </span>

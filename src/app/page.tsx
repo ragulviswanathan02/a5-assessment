@@ -154,10 +154,14 @@ function AssessmentApp() {
       {step !== 'exam' && (
         <header className="bg-white border-b border-slate-200 px-4 py-3 shadow-2xs">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
-                A5
-              </div>
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/a5-company-logo.png"
+                alt="A5 Automation"
+                className="h-8 w-auto object-contain"
+              />
+              <div className="h-4 w-px bg-slate-200" />
               <span className="font-bold text-slate-900 text-sm tracking-tight">
                 Assessment Portal
               </span>

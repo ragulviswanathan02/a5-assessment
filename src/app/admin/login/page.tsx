@@ -46,9 +46,12 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
-            <Shield className="w-7 h-7" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/a5-company-logo.png"
+            alt="A5 Automation"
+            className="h-12 w-auto object-contain mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Authentication</h1>
           <p className="text-slate-500 text-xs md:text-sm mt-1">
             Sign in with your database administrator credentials.
