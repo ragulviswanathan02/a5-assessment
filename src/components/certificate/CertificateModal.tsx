@@ -152,154 +152,150 @@ export default function CertificateModal({ data, onClose }: Props) {
               boxSizing: 'border-box',
             }}
           >
-            {/* ── Flowing Content Area (perfectly positioned below header logo and above seal) ── */}
+            {/* ── Flowing Content Area (perfectly balanced matching original PDF) ── */}
             <div style={{
               position: 'absolute',
-              top: '154px',
-              left: '140px',
-              right: '140px',
-              bottom: '120px',
+              top: '168px',
+              left: '120px',
+              right: '120px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'space-between',
               textAlign: 'center',
             }}>
 
               {/* Title Section */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <p style={{
-                  fontFamily: "'Cinzel',serif",
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  letterSpacing: '5px',
-                  color: '#0c2340',
-                  textTransform: 'uppercase',
-                  margin: '0 0 4px',
-                }}>
-                  Certificate of
-                </p>
-                <h1 style={{
-                  fontFamily: "'Cinzel',serif",
-                  fontSize: '26px',
-                  fontWeight: 800,
-                  letterSpacing: '2px',
-                  color: '#0c2340',
-                  textTransform: 'uppercase',
-                  lineHeight: 1.15,
-                  margin: 0,
-                  maxWidth: '650px',
-                }}>
-                  {titleText}
-                </h1>
-              </div>
+              <p style={{
+                fontFamily: "'Cinzel',serif",
+                fontSize: '15px',
+                fontWeight: 700,
+                letterSpacing: '5px',
+                color: '#0c2340',
+                textTransform: 'uppercase',
+                margin: '0 0 6px',
+              }}>
+                Certificate of
+              </p>
+              <h1 style={{
+                fontFamily: "'Cinzel',serif",
+                fontSize: '26px',
+                fontWeight: 800,
+                letterSpacing: '2px',
+                color: '#0c2340',
+                textTransform: 'uppercase',
+                lineHeight: 1.2,
+                margin: '0 0 24px',
+                maxWidth: '680px',
+              }}>
+                {titleText}
+              </h1>
 
               {/* Recipient & Qualification Details */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <p style={{
-                  fontSize: '12.5px',
-                  fontWeight: 600,
-                  color: '#1a2b4a',
-                  margin: '0 0 2px',
-                }}>
-                  This is to certify that
-                </p>
+              <p style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#1a2b4a',
+                margin: '0 0 2px',
+              }}>
+                This is to certify that
+              </p>
 
-                {/* Student Name */}
-                <div style={{
-                  fontFamily: "'Alex Brush',cursive",
-                  fontSize: '52px',
-                  fontWeight: 400,
-                  color: '#0c2340',
-                  lineHeight: 1.05,
-                  margin: '0 0 2px',
-                  letterSpacing: '1px',
-                }}>
-                  {displayName}
-                </div>
-
-                {/* Refined Gold Underline */}
-                <div style={{
-                  width: '440px',
-                  maxWidth: '70%',
-                  height: '1.5px',
-                  background: 'linear-gradient(90deg, transparent 0%, #c8a84b 20%, #e5c365 50%, #c8a84b 80%, transparent 100%)',
-                  margin: '4px auto 10px',
-                }} />
-
-                <p style={{
-                  fontSize: '13.5px',
-                  fontWeight: 700,
-                  color: '#0c2340',
-                  margin: '0 0 2px',
-                }}>
-                  of {collegeText}
-                </p>
-
-                <p style={{
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: '#334155',
-                  margin: '0 0 2px',
-                }}>
-                  has successfully qualified in the
-                </p>
-
-                <h3 style={{
-                  fontSize: '15px',
-                  fontWeight: 800,
-                  color: '#0c2340',
-                  letterSpacing: '0.2px',
-                  margin: '0 0 8px',
-                }}>
-                  {titleText} Assessment
-                </h3>
-
-                {/* Score & Qualifying criteria */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '16px',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  color: '#0c2340',
-                  margin: '0 0 8px',
-                }}>
-                  <span>
-                    Assessment Score:{' '}
-                    <strong style={{ color: '#0284c7' }}>
-                      {Math.round(data.percentage)}%
-                    </strong>
-                  </span>
-                  <span style={{ color: '#94a3b8', fontWeight: 300, fontSize: '14px' }}>|</span>
-                  <span>
-                    Minimum Qualifying Score:{' '}
-                    <strong style={{ color: '#0c2340' }}>{qualifyingText}</strong>
-                  </span>
-                </div>
-
-                {/* Academy Disclaimer */}
-                <p style={{
-                  fontSize: '9.5px',
-                  color: '#64748b',
-                  lineHeight: 1.45,
-                  maxWidth: '520px',
-                  margin: 0,
-                }}>
-                  This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit.{' '}
-                  It does not represent completion of the full training program.
-                </p>
+              {/* Student Name */}
+              <div style={{
+                fontFamily: "'Alex Brush',cursive",
+                fontSize: '52px',
+                fontWeight: 400,
+                color: '#0c2340',
+                lineHeight: 1.05,
+                margin: '0 0 2px',
+                letterSpacing: '1px',
+              }}>
+                {displayName}
               </div>
+
+              {/* Refined Gold Underline */}
+              <div style={{
+                width: '440px',
+                maxWidth: '70%',
+                height: '1.5px',
+                background: 'linear-gradient(90deg, transparent 0%, #c8a84b 20%, #e5c365 50%, #c8a84b 80%, transparent 100%)',
+                margin: '4px auto 10px',
+              }} />
+
+              <p style={{
+                fontSize: '13.5px',
+                fontWeight: 700,
+                color: '#0c2340',
+                margin: '0 0 3px',
+              }}>
+                of {collegeText}
+              </p>
+
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: '#334155',
+                margin: '0 0 3px',
+              }}>
+                has successfully qualified in the
+              </p>
+
+              <h3 style={{
+                fontSize: '15px',
+                fontWeight: 800,
+                color: '#0c2340',
+                letterSpacing: '0.2px',
+                margin: '0 0 10px',
+              }}>
+                {titleText} Assessment
+              </h3>
+
+              {/* Score & Qualifying criteria */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                color: '#0c2340',
+                margin: '0 0 10px',
+              }}>
+                <span>
+                  Assessment Score:{' '}
+                  <strong style={{ color: '#0284c7' }}>
+                    {Math.round(data.percentage)}%
+                  </strong>
+                </span>
+                <span style={{ color: '#94a3b8', fontWeight: 300, fontSize: '14px' }}>|</span>
+                <span>
+                  Minimum Qualifying Score:{' '}
+                  <strong style={{ color: '#0c2340' }}>{qualifyingText}</strong>
+                </span>
+              </div>
+
+              {/* Academy Disclaimer */}
+              <p style={{
+                fontSize: '9.5px',
+                color: '#64748b',
+                lineHeight: 1.5,
+                maxWidth: '540px',
+                margin: '0 auto',
+              }}>
+                This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit.{' '}
+                It does not represent completion of the full training program.
+              </p>
 
             </div>
 
-            {/* Date on bottom right */}
+            {/* Date positioned directly under the gold line on the right */}
             <p style={{
               position: 'absolute',
-              right: '175px',
-              bottom: '50px',
-              fontSize: '11.5px',
+              top: '584px',
+              left: '576px',
+              width: '232px',
+              textAlign: 'center',
+              fontSize: '11px',
               fontWeight: 600,
               color: '#334155',
               margin: 0,
