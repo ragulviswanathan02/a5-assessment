@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { X, Printer, Award } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 
 export interface CertificateData {
   id?: string;
@@ -94,7 +94,7 @@ export default function CertificateModal({ data, onClose }: Props) {
             <img
               src="/a5-company-logo.png"
               alt="A5 Automation"
-              style={{ height: '20px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '22px', width: 'auto', objectFit: 'contain' }}
             />
             <span style={{ fontWeight: 700, fontSize: '13px', fontFamily: 'Montserrat,sans-serif', letterSpacing: '0.5px' }}>
               Official Academy Certificate
@@ -157,10 +157,10 @@ export default function CertificateModal({ data, onClose }: Props) {
               boxSizing: 'border-box',
             }}
           >
-            {/* ── Flowing Content Area (perfectly balanced matching original PDF) ── */}
+            {/* ── Flowing Content Area (generous breathing room top & bottom) ── */}
             <div style={{
               position: 'absolute',
-              top: '168px',
+              top: '46px',
               left: '120px',
               right: '120px',
               display: 'flex',
@@ -169,27 +169,41 @@ export default function CertificateModal({ data, onClose }: Props) {
               textAlign: 'center',
             }}>
 
+              {/* Academy Full Logo — lowered for elegant padding from the top gold border */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/a5a-full-academy-logo.png"
+                alt="A5 Automation Training Academy"
+                style={{
+                  height: '66px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  display: 'block',
+                  margin: '0 auto 10px',
+                }}
+              />
+
               {/* Title Section */}
               <p style={{
                 fontFamily: "'Cinzel',serif",
-                fontSize: '15px',
+                fontSize: '14.5px',
                 fontWeight: 700,
                 letterSpacing: '5px',
                 color: '#0c2340',
                 textTransform: 'uppercase',
-                margin: '0 0 6px',
+                margin: '0 0 4px',
               }}>
                 Certificate of
               </p>
               <h1 style={{
                 fontFamily: "'Cinzel',serif",
-                fontSize: '26px',
+                fontSize: '25px',
                 fontWeight: 800,
                 letterSpacing: '2px',
                 color: '#0c2340',
                 textTransform: 'uppercase',
                 lineHeight: 1.2,
-                margin: '0 0 24px',
+                margin: '0 0 16px',
                 maxWidth: '680px',
               }}>
                 {titleText}
@@ -197,7 +211,7 @@ export default function CertificateModal({ data, onClose }: Props) {
 
               {/* Recipient & Qualification Details */}
               <p style={{
-                fontSize: '13px',
+                fontSize: '12.5px',
                 fontWeight: 600,
                 color: '#1a2b4a',
                 margin: '0 0 2px',
@@ -208,7 +222,7 @@ export default function CertificateModal({ data, onClose }: Props) {
               {/* Student Name */}
               <div style={{
                 fontFamily: "'Alex Brush',cursive",
-                fontSize: '52px',
+                fontSize: '48px',
                 fontWeight: 400,
                 color: '#0c2340',
                 lineHeight: 1.05,
@@ -231,7 +245,7 @@ export default function CertificateModal({ data, onClose }: Props) {
                 fontSize: '13.5px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 3px',
+                margin: '0 0 2px',
               }}>
                 of {collegeText}
               </p>
@@ -240,17 +254,17 @@ export default function CertificateModal({ data, onClose }: Props) {
                 fontSize: '12px',
                 fontWeight: 500,
                 color: '#334155',
-                margin: '0 0 3px',
+                margin: '0 0 2px',
               }}>
                 has successfully qualified in the
               </p>
 
               <h3 style={{
-                fontSize: '16.5px',
+                fontSize: '15.5px',
                 fontWeight: 800,
                 color: '#0c2340',
                 letterSpacing: '0.3px',
-                margin: '0 0 14px',
+                margin: '0 0 10px',
               }}>
                 {titleText} Assessment
               </h3>
@@ -261,10 +275,10 @@ export default function CertificateModal({ data, onClose }: Props) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '12px',
-                fontSize: '13.5px',
+                fontSize: '13px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 14px',
+                margin: '0 0 10px',
                 letterSpacing: '0.2px',
               }}>
                 <span>
@@ -282,10 +296,10 @@ export default function CertificateModal({ data, onClose }: Props) {
 
               {/* Academy Disclaimer — sharp, readable dark slate, no dullness */}
               <p style={{
-                fontSize: '10.5px',
+                fontSize: '10px',
                 fontWeight: 500,
                 color: '#1e293b',
-                lineHeight: 1.55,
+                lineHeight: 1.5,
                 maxWidth: '560px',
                 margin: '0 auto',
                 letterSpacing: '0.1px',
@@ -296,7 +310,7 @@ export default function CertificateModal({ data, onClose }: Props) {
 
             </div>
 
-            {/* Date positioned directly under the gold line on the right */}
+            {/* Date positioned cleanly directly on the pure ivory canvas */}
             <p style={{
               position: 'absolute',
               top: '585px',
@@ -317,16 +331,43 @@ export default function CertificateModal({ data, onClose }: Props) {
       </div>{/* end modal shell */}
 
       <style jsx global>{`
-        @page { size: A4 landscape; margin: 0; }
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
         @media print {
-          html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-          body * { visibility: hidden !important; }
+          html, body {
+            width: 297mm !important;
+            height: 210mm !important;
+            max-width: 297mm !important;
+            max-height: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #fff !important;
+          }
+          body * {
+            visibility: hidden !important;
+          }
           #printable-certificate,
-          #printable-certificate * { visibility: visible !important; }
+          #printable-certificate * {
+            visibility: visible !important;
+          }
           #printable-certificate {
-            position: fixed !important; inset: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            margin: 0 !important; padding: 0 !important;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 1024px !important;
+            height: 679px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+            break-before: avoid !important;
+            break-after: avoid !important;
+            break-inside: avoid !important;
             box-shadow: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
