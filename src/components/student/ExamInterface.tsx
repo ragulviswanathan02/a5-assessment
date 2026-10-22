@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Question, Paper } from '@/types/database';
 import {
   Clock,
@@ -46,11 +46,22 @@ export default function ExamInterface({
   const [secondsRemaining, setSecondsRemaining] = useState(totalSeconds > 0 ? totalSeconds : 999999);
   const [startTime] = useState(Date.now());
 
-  // Handle final submission
+  // Refs to guarantee auto-submission captures latest state without interval resetting
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+
+  const tabSwitchesRef = useRef(tabSwitches);
+  tabSwitchesRef.current = tabSwitches;
+
+  const submittedRef = useRef(false);
+
+  // Handle final submission (manual or timer-triggered auto-submit)
   const handleFinalSubmit = useCallback(() => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-    onSubmit(answers, tabSwitches, elapsedSeconds);
-  }, [answers, tabSwitches, startTime, onSubmit]);
+    onSubmit(answersRef.current, tabSwitchesRef.current, elapsedSeconds);
+  }, [startTime, onSubmit]);
 
   // Countdown timer effect
   useEffect(() => {
