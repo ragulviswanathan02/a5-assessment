@@ -241,46 +241,49 @@ export default function CertificateModal({ data, onClose }: Props) {
               </p>
 
               <h3 style={{
-                fontSize: '15px',
+                fontSize: '16.5px',
                 fontWeight: 800,
                 color: '#0c2340',
-                letterSpacing: '0.2px',
-                margin: '0 0 10px',
+                letterSpacing: '0.3px',
+                margin: '0 0 14px',
               }}>
                 {titleText} Assessment
               </h3>
 
-              {/* Score & Qualifying criteria */}
+              {/* Score & Qualifying criteria — bold, sharp, high contrast */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '16px',
-                fontSize: '12.5px',
+                gap: '12px',
+                fontSize: '13.5px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 10px',
+                margin: '0 0 14px',
+                letterSpacing: '0.2px',
               }}>
                 <span>
                   Assessment Score:{' '}
-                  <strong style={{ color: '#0284c7' }}>
+                  <strong style={{ color: '#0284c7', fontWeight: 800 }}>
                     {Math.round(data.percentage)}%
                   </strong>
                 </span>
-                <span style={{ color: '#94a3b8', fontWeight: 300, fontSize: '14px' }}>|</span>
+                <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '15px' }}>|</span>
                 <span>
                   Minimum Qualifying Score:{' '}
-                  <strong style={{ color: '#0c2340' }}>{qualifyingText}</strong>
+                  <strong style={{ color: '#0c2340', fontWeight: 800 }}>{qualifyingText}</strong>
                 </span>
               </div>
 
-              {/* Academy Disclaimer */}
+              {/* Academy Disclaimer — sharp, readable dark slate, no dullness */}
               <p style={{
-                fontSize: '9.5px',
-                color: '#64748b',
-                lineHeight: 1.5,
-                maxWidth: '540px',
+                fontSize: '10.5px',
+                fontWeight: 500,
+                color: '#1e293b',
+                lineHeight: 1.55,
+                maxWidth: '560px',
                 margin: '0 auto',
+                letterSpacing: '0.1px',
               }}>
                 This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit.{' '}
                 It does not represent completion of the full training program.
@@ -291,17 +294,17 @@ export default function CertificateModal({ data, onClose }: Props) {
             {/* Date positioned directly under the gold line on the right */}
             <p style={{
               position: 'absolute',
-              top: '584px',
+              top: '585px',
               left: '576px',
               width: '232px',
               textAlign: 'center',
               fontSize: '11px',
               fontWeight: 600,
-              color: '#334155',
+              color: '#1e293b',
               margin: 0,
               letterSpacing: '0.2px',
             }}>
-              Date of Assessment: <strong style={{ color: '#0c2340', fontWeight: 700 }}>{formattedDate}</strong>
+              Date of Assessment: <strong style={{ color: '#0c2340', fontWeight: 800 }}>{formattedDate}</strong>
             </p>
 
           </div>{/* end certificate */}
