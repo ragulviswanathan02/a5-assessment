@@ -508,9 +508,9 @@ export default function AnalyticsTab({
                                 score: sub.total_score,
                                 maxScore: sub.max_score,
                                 percentage: sub.percentage,
+                                cutoffPercentage: currentCert.minPercentage,
+                                cutoffMarks: currentCert.minMarks,
                                 issueDate: sub.submitted_at,
-                                signatory: currentCert.signatory,
-                                signatoryTitle: currentCert.signatoryTitle,
                               })
                             }
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors text-xs font-semibold cursor-pointer"

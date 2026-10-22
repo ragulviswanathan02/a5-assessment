@@ -196,9 +196,9 @@ export default function ResultScreen({
             score: certData.score ?? result?.totalScore ?? 0,
             maxScore: certData.maxScore ?? result?.maxScore ?? 0,
             percentage: certData.percentage ?? result?.percentage ?? 0,
+            cutoffPercentage: certData.minPercentage,
+            cutoffMarks: certData.minMarks,
             issueDate: certData.issueDate,
-            signatory: certData.signatory,
-            signatoryTitle: certData.signatoryTitle,
           }}
           onClose={() => setShowCertModal(false)}
         />

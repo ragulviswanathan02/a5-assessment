@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { X, Printer, Download, Award, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { X, Printer, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export interface CertificateData {
   id?: string;
@@ -11,9 +11,9 @@ export interface CertificateData {
   score: number;
   maxScore: number;
   percentage: number;
+  cutoffPercentage?: number;
+  cutoffMarks?: number;
   issueDate?: string;
-  signatory?: string;
-  signatoryTitle?: string;
 }
 
 interface Props {
@@ -24,34 +24,45 @@ interface Props {
 export default function CertificateModal({ data, onClose }: Props) {
   const certificateRef = useRef<HTMLDivElement>(null);
 
-  const formattedDate = data.issueDate
-    ? new Date(data.issueDate).toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      })
-    : new Date().toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      });
+  // Format date as DD/MM/YYYY to match academy template (e.g. 23/10/2026)
+  const dateObj = data.issueDate ? new Date(data.issueDate) : new Date();
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  const formattedDate = `${day}/${month}/${year}`;
 
-  const certId = data.id || 'A5-' + new Date().getFullYear() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const certId =
+    data.id ||
+    'A5A-' + year + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const handlePrint = () => {
     window.print();
   };
 
+  const qualifyingScoreText =
+    data.cutoffPercentage && data.cutoffPercentage > 0
+      ? `${data.cutoffPercentage}%`
+      : data.cutoffMarks && data.cutoffMarks > 0
+      ? `${data.cutoffMarks} Marks`
+      : '70%';
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:fixed print:inset-0">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:fixed print:inset-0">
+      {/* Import Academy Fonts */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap"
+      />
+
       {/* Container Card */}
       <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh] print:max-h-none print:border-none print:shadow-none print:w-full print:rounded-none">
         {/* Header Action Bar (Hidden in Print) */}
         <div className="flex items-center justify-between px-6 py-3.5 bg-slate-900 text-white print:hidden">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-400" />
-            <span className="font-bold text-sm tracking-tight">Verified Credential Certificate</span>
-            <span className="ml-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1 border border-emerald-500/30">
+            <span className="font-bold text-sm tracking-tight">Official Academy Certificate</span>
+            <span className="ml-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1 border border-emerald-500/30 font-mono">
               <ShieldCheck className="w-3.5 h-3.5" /> ID: {certId}
             </span>
           </div>
@@ -75,168 +86,156 @@ export default function CertificateModal({ data, onClose }: Props) {
         </div>
 
         {/* Scrollable Preview Area */}
-        <div className="flex-1 overflow-auto p-4 sm:p-8 bg-slate-100 flex items-center justify-center print:p-0 print:bg-white print:overflow-visible">
+        <div className="flex-1 overflow-auto p-3 sm:p-6 bg-slate-200/70 flex items-center justify-center print:p-0 print:bg-white print:overflow-visible">
           {/* ================= ACTUAL PRINTABLE CERTIFICATE ================= */}
           <div
             id="printable-certificate"
             ref={certificateRef}
-            className="w-full max-w-[950px] aspect-[1.414/1] bg-[#fdfcf9] text-slate-900 p-6 sm:p-10 relative flex flex-col justify-between shadow-lg print:shadow-none border-[3px] border-[#0f172a] select-none"
+            className="w-full max-w-[1024px] aspect-[1.414/1] bg-white text-[#0c2340] relative flex flex-col justify-between shadow-2xl print:shadow-none overflow-hidden select-none"
             style={{
-              fontFamily: "'Times New Roman', Times, serif",
-              backgroundImage: 'radial-gradient(#e2d9c2 0.75px, transparent 0.75px)',
-              backgroundSize: '24px 24px',
+              fontFamily: "'Montserrat', sans-serif",
             }}
           >
-            {/* Inner Decorative Gold Double Border */}
-            <div className="absolute inset-2 sm:inset-3 border border-[#c5a059] pointer-events-none" />
-            <div className="absolute inset-3 sm:inset-4 border border-[#e5d5b0] pointer-events-none" />
+            {/* 1. Geometric Navy & Gold Corner Facets */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/corner-tl-clean.png"
+              alt="Corner Top Left"
+              className="absolute top-0 left-0 w-32 sm:w-44 h-auto pointer-events-none z-10 select-none"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/corner-tr-clean.png"
+              alt="Corner Top Right"
+              className="absolute top-0 right-0 w-32 sm:w-44 h-auto pointer-events-none z-10 select-none"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/corner-bl-clean.png"
+              alt="Corner Bottom Left"
+              className="absolute bottom-0 left-0 w-32 sm:w-44 h-auto pointer-events-none z-10 select-none"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/corner-br-clean.png"
+              alt="Corner Bottom Right"
+              className="absolute bottom-0 right-0 w-32 sm:w-44 h-auto pointer-events-none z-10 select-none"
+            />
 
-            {/* Corner Decorative Ornaments */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[#c5a059]" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-[#c5a059]" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-[#c5a059]" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-[#c5a059]" />
+            {/* Inset Gold Hairline Framing */}
+            <div className="absolute inset-4 sm:inset-5 border-[1.5px] border-[#d4af37] pointer-events-none z-5" />
+            <div className="absolute inset-5 sm:inset-6 border border-[#d4af37]/35 pointer-events-none z-5" />
 
-            {/* TOP HEADER: MSME, A5 Logo & Company Name, ISO 9001 */}
-            <div className="relative z-10 flex items-center justify-between gap-4 pt-1 border-b border-[#e5d5b0]/60 pb-3">
-              {/* Left: MSME Logo */}
-              <div className="w-32 sm:w-40 flex items-center justify-start">
+            {/* Content Container */}
+            <div className="relative z-20 h-full flex flex-col items-center justify-between text-center px-8 sm:px-16 pt-7 sm:pt-9 pb-5 sm:pb-7">
+              {/* TOP BRANDING & LOGO */}
+              <div className="flex flex-col items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/msme-logo.svg"
-                  alt="MSME Government of India"
-                  className="h-10 sm:h-12 w-auto object-contain"
+                  src="/a5a-academy-logo.png"
+                  alt="A5 Automation Training Academy"
+                  className="h-14 sm:h-20 object-contain mb-1.5"
                 />
-              </div>
 
-              {/* Center: A5 Automation Logo & Name */}
-              <div className="text-center flex flex-col items-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border border-[#c5a059] shadow-2xs mb-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/a5-automation-logo.jpg"
-                    alt="A5 Automation Logo"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h1 className="text-lg sm:text-2xl font-bold tracking-[0.2em] text-[#0f172a] uppercase leading-tight font-sans">
-                  A5 Automation
-                </h1>
-                <p className="text-[9px] sm:text-[10px] tracking-[0.25em] text-[#856424] font-semibold uppercase font-sans">
-                  Institute of Technical Excellence
-                </p>
-              </div>
-
-              {/* Right: ISO 9001:2015 Logo */}
-              <div className="w-32 sm:w-40 flex items-center justify-end">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/iso-logo.svg"
-                  alt="ISO 9001:2015 Certified"
-                  className="h-12 sm:h-16 w-auto object-contain"
-                />
-              </div>
-            </div>
-
-            {/* CERTIFICATE TITLE */}
-            <div className="relative z-10 text-center my-auto py-2">
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-[0.18em] text-[#0f172a] uppercase font-serif mb-1">
-                Certificate
-              </h2>
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="w-12 sm:w-20 h-[1px] bg-[#c5a059]" />
-                <p className="text-xs sm:text-sm font-bold tracking-[0.35em] text-[#856424] uppercase">
-                  Of Qualification
-                </p>
-                <div className="w-12 sm:w-20 h-[1px] bg-[#c5a059]" />
-              </div>
-
-              {/* RECIPIENT STATEMENT */}
-              <p className="text-xs sm:text-sm italic text-[#475569] mb-1">
-                This is to certify that
-              </p>
-
-              {/* RECIPIENT FULL NAME */}
-              <div className="my-2">
-                <h3
-                  className="text-2xl sm:text-4xl text-[#0f172a] font-normal leading-tight px-4 inline-block pb-1"
-                  style={{ fontFamily: "'Brush Script MT', 'Great Vibes', 'Playfair Display', cursive, serif" }}
+                <div
+                  className="text-[12px] sm:text-[14px] font-bold tracking-[0.25em] text-[#0c2340] uppercase mt-1"
+                  style={{ fontFamily: "'Cinzel', serif" }}
                 >
-                  {data.studentName || 'Student Name'}
-                </h3>
-                <div className="w-72 sm:w-96 mx-auto h-[1.5px] bg-[#c5a059]/70 mt-1" />
+                  CERTIFICATE OF
+                </div>
+                <h1
+                  className="text-lg sm:text-2xl md:text-3xl font-black tracking-[0.12em] text-[#0c2340] uppercase leading-tight mt-0.5"
+                  style={{ fontFamily: "'Cinzel', serif" }}
+                >
+                  {data.paperTitle
+                    ? data.paperTitle.toUpperCase()
+                    : 'INDUSTRIAL AUTOMATION APTITUDE'}
+                </h1>
               </div>
 
-              {/* RECIPIENT COLLEGE */}
-              {data.studentCollege && (
-                <p className="text-sm sm:text-base font-semibold tracking-wider text-[#856424] uppercase mt-1 mb-2 font-sans">
-                  {data.studentCollege}
+              {/* BODY: RECIPIENT & QUALIFICATION DETAILS */}
+              <div className="my-auto w-full max-w-2xl flex flex-col items-center py-1">
+                <p className="text-xs sm:text-sm font-medium text-[#1e293b] mb-1">
+                  This is to certify that
                 </p>
-              )}
 
-              {/* QUALIFICATION DETAIL */}
-              <p className="text-xs sm:text-sm text-[#475569] mb-1">
-                has successfully qualified with distinction in the assessment of the
-              </p>
-              <h4 className="text-base sm:text-xl font-bold text-[#0f172a] tracking-wide my-1">
-                {data.paperTitle || 'Industrial Automation Skill Training Program'}
-              </h4>
+                {/* Candidate Name in Alex Brush Script */}
+                <h2
+                  className="text-3xl sm:text-5xl md:text-[54px] text-[#0b2545] font-normal leading-tight tracking-wide my-0.5"
+                  style={{ fontFamily: "'Alex Brush', 'Great Vibes', cursive" }}
+                >
+                  {data.studentName || 'Student Full Name'}
+                </h2>
 
-              {/* METRIC STRIP */}
-              <p className="text-xs sm:text-sm text-[#64748b] tracking-wider mt-2 font-sans">
-                Qualified on <strong className="text-[#0f172a]">{formattedDate}</strong> &nbsp;•&nbsp; Score Scored:{' '}
-                <strong className="text-[#0f172a]">
-                  {data.score} / {data.maxScore} ({Math.round(data.percentage)}%)
-                </strong>
-              </p>
-            </div>
+                {/* Golden Gradient Underline Accent */}
+                <div className="w-64 sm:w-80 md:w-96 h-[1.5px] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mb-2 sm:mb-2.5" />
 
-            {/* BOTTOM SECTION: VERIFICATION QR + SEAL + SIGNATURE */}
-            <div className="relative z-10 flex items-end justify-between pt-2 border-t border-[#e5d5b0]/60 mt-auto">
-              {/* Left: Certificate ID & QR Code */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 p-0.5 bg-white border border-[#c5a059] rounded-xs shadow-2xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/test-qr-code.png"
-                    alt="Verification QR"
-                    className="w-full h-full object-contain"
-                  />
+                {/* Candidate College */}
+                <p className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0c2340] mb-0.5">
+                  of {data.studentCollege || 'Hindustan College of Technology, Salem'}
+                </p>
+
+                <p className="text-[11px] sm:text-xs text-[#334155] mb-0.5">
+                  has successfully qualified in the
+                </p>
+
+                {/* Assessment Topic Line */}
+                <h3 className="text-xs sm:text-base font-extrabold text-[#0c2340] mb-2">
+                  {data.paperTitle || 'Industrial Automation Aptitude'} Assessment
+                </h3>
+
+                {/* Score & Cutoff Pill Badge */}
+                <div className="inline-flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-1 sm:py-1.5 rounded-full bg-[#f8fafc] border border-slate-300 text-[11px] sm:text-xs font-bold text-[#0c2340] shadow-2xs mb-2">
+                  <span>
+                    Assessment Score:{' '}
+                    <strong className="text-[#0284c7]">
+                      {Math.round(data.percentage)}%
+                    </strong>
+                  </span>
+                  <span className="text-slate-300">|</span>
+                  <span>
+                    Minimum Qualifying Score:{' '}
+                    <strong className="text-[#0c2340]">{qualifyingScoreText}</strong>
+                  </span>
                 </div>
-                <div className="text-left font-sans">
-                  <p className="text-[9px] sm:text-[10px] text-[#64748b] font-semibold uppercase tracking-wider">
-                    Credential ID
+
+                {/* Disclaimer / Accreditation Clause */}
+                <p className="text-[9px] sm:text-[10px] text-[#64748b] max-w-xl mx-auto leading-relaxed text-center px-4">
+                  This certificate recognizes technical aptitude and eligibility for the A5A Automation Training Academy course admission benefit. It does not represent completion of the full training program.
+                </p>
+              </div>
+
+              {/* FOOTER: CREDENTIAL ID + CENTRAL LAUREL MEDALLION + DATE */}
+              <div className="w-full flex items-end justify-between px-3 sm:px-6 pt-1">
+                {/* Left: Credential ID */}
+                <div className="text-left">
+                  <p className="text-[9px] sm:text-[10px] font-bold text-[#0c2340] uppercase tracking-wider">
+                    Credential ID:
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-[#0f172a] font-mono tracking-wider">
+                  <p className="text-[10px] sm:text-xs font-mono font-bold text-[#475569]">
                     {certId}
                   </p>
-                  <p className="text-[8px] sm:text-[9px] text-[#856424] flex items-center gap-1 font-medium">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" /> Official Digital Record
+                  <p className="text-[8px] sm:text-[9px] text-emerald-700 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-2.5 h-2.5 inline" /> Verified Academy Record
                   </p>
                 </div>
-              </div>
 
-              {/* Center: Golden Seal */}
-              <div className="flex flex-col items-center pb-1">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/a5-seal.svg"
-                  alt="A5 Official Seal"
-                  className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-xs"
-                />
-              </div>
-
-              {/* Right: Signature */}
-              <div className="text-center w-40 sm:w-48 font-sans">
-                <div className="font-serif italic text-lg sm:text-xl text-[#0f172a] border-b border-[#0f172a] pb-1 mb-1 font-bold">
-                  {data.signatory || 'Director'}
+                {/* Center: Golden Laurel Wreath Medallion Seal */}
+                <div className="flex flex-col items-center -mb-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/a5a-laurel-seal.png"
+                    alt="A5A Official Laurel Seal"
+                    className="h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-sm select-none"
+                  />
                 </div>
-                <p className="text-[10px] sm:text-[11px] font-bold text-[#0f172a] uppercase tracking-wider">
-                  Authorized Signatory
-                </p>
-                <p className="text-[9px] sm:text-[10px] text-[#64748b] font-medium tracking-wide">
-                  {data.signatoryTitle || 'A5 Automation'}
-                </p>
+
+                {/* Right: Date of Assessment */}
+                <div className="text-right">
+                  <p className="text-[11px] sm:text-xs font-semibold text-[#0c2340]">
+                    Date of Assessment: <strong className="font-bold">{formattedDate}</strong>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -245,7 +244,18 @@ export default function CertificateModal({ data, onClose }: Props) {
 
       {/* Global CSS for Print Optimization */}
       <style jsx global>{`
+        @page {
+          size: landscape;
+          margin: 0;
+        }
         @media print {
+          html,
+          body {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
           body * {
             visibility: hidden;
           }
@@ -254,16 +264,16 @@ export default function CertificateModal({ data, onClose }: Props) {
             visibility: visible;
           }
           #printable-certificate {
-            position: fixed;
-            left: 0;
-            top: 0;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 30px !important;
+            padding: 0 !important;
             box-shadow: none !important;
-            border: 4px solid #0f172a !important;
+            border: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }

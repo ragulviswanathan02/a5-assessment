@@ -447,7 +447,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                         Certificate of Qualification
                       </h4>
                       <p className="text-[11px] text-slate-500">
-                        Award verified credentials with MSME, ISO, and A5 logos
+                        Award official A5 Automation Training Academy credentials
                       </p>
                     </div>
                   </div>
@@ -511,33 +511,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Authorized Signatory Name
-                        </label>
-                        <input
-                          type="text"
-                          value={certificateSignatory}
-                          onChange={(e) => setCertificateSignatory(e.target.value)}
-                          placeholder="Director / Head of Training"
-                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
-                        />
-                      </div>
 
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Signatory Organization
-                        </label>
-                        <input
-                          type="text"
-                          value={certificateSignatoryTitle}
-                          onChange={(e) => setCertificateSignatoryTitle(e.target.value)}
-                          placeholder="A5 Automation"
-                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
-                        />
-                      </div>
-                    </div>
 
                     <div className="bg-amber-100/60 p-2.5 rounded-lg text-[11px] text-amber-900 flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
