@@ -1,38 +1,34 @@
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1650" width="1200" height="1650">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#090d16"/>
-      <stop offset="40%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#1e1b4b"/>
+    <!-- Light Background Gradient -->
+    <linearGradient id="bgLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2ff"/>
     </linearGradient>
 
-    <!-- Accent Indigo-Violet Gradient -->
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- Vibrant Royal Indigo Gradient -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <!-- Cyan to Indigo Accent Line -->
+    <linearGradient id="accentBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#4f46e5"/>
       <stop offset="50%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
     </linearGradient>
 
-    <!-- Card Glow Gradient -->
-    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.8"/>
-      <stop offset="50%" stop-color="#a855f7" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.8"/>
-    </linearGradient>
-
-    <!-- QR Container Shadow -->
-    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="25" stdDeviation="30" flood-color="#000000" flood-opacity="0.6"/>
+    <!-- Soft Ambient Glow Card Shadow -->
+    <filter id="softCardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="25" flood-color="#312e81" flood-opacity="0.10"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.05"/>
     </filter>
 
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#4f46e5" flood-opacity="0.25"/>
     </filter>
   </defs>
 
@@ -43,59 +39,58 @@
     }
   </style>
 
-  <!-- Deep Cosmic Tech Background -->
-  <rect width="1200" height="1650" fill="url(#bgGrad)"/>
+  <!-- Clean Off-White / Crisp Light Background -->
+  <rect width="1200" height="1650" fill="url(#bgLight)"/>
 
-  <!-- Subtle Ambient Glow Rings -->
-  <circle cx="600" cy="180" r="320" fill="#4f46e5" opacity="0.18" filter="url(#glow)"/>
-  <circle cx="150" cy="900" r="280" fill="#a855f7" opacity="0.08" filter="url(#glow)"/>
-  <circle cx="1050" cy="1200" r="300" fill="#38bdf8" opacity="0.08" filter="url(#glow)"/>
+  <!-- Soft Ambient Pastel Corner Highlights -->
+  <circle cx="600" cy="160" r="380" fill="#e0e7ff" opacity="0.6"/>
+  <circle cx="100" cy="850" r="300" fill="#ede9fe" opacity="0.4"/>
+  <circle cx="1100" cy="1200" r="320" fill="#e0f2fe" opacity="0.5"/>
 
   <!-- Top Accent Bar -->
-  <rect x="0" y="0" width="1200" height="8" fill="url(#accentGrad)"/>
+  <rect x="0" y="0" width="1200" height="10" fill="url(#accentBar)"/>
+
+  <!-- Outer Frame Border -->
+  <rect x="30" y="30" width="1140" height="1590" rx="32" fill="none" stroke="#e2e8f0" stroke-width="2"/>
 
   <!-- ================= HEADER SECTION ================= -->
-  <!-- Logo Icon Container -->
+  <!-- A5 Brand Badge Icon -->
   <g transform="translate(600, 130)">
-    <!-- Outer Glow Square -->
-    <rect x="-48" y="-48" width="96" height="96" rx="26" fill="url(#accentGrad)" filter="url(#glow)"/>
-    <text x="0" y="14" fill="#ffffff" font-size="44" font-weight="900" text-anchor="middle" letter-spacing="-1">A5</text>
+    <rect x="-46" y="-46" width="92" height="92" rx="24" fill="url(#brandGrad)" filter="url(#badgeShadow)"/>
+    <text x="0" y="14" fill="#ffffff" font-size="42" font-weight="900" text-anchor="middle" letter-spacing="-1">A5</text>
   </g>
 
-  <!-- Institute Brand Name -->
-  <text x="600" y="240" fill="#ffffff" font-size="40" font-weight="800" text-anchor="middle" letter-spacing="2">
+  <!-- Institute Name & Subtitle -->
+  <text x="600" y="240" fill="#0f172a" font-size="40" font-weight="900" text-anchor="middle" letter-spacing="3">
     A5 AUTOMATION
   </text>
-  <text x="600" y="272" fill="#94a3b8" font-size="16" font-weight="600" text-anchor="middle" letter-spacing="4">
+  <text x="600" y="274" fill="#64748b" font-size="16" font-weight="700" text-anchor="middle" letter-spacing="4">
     INSTITUTE OF TECHNICAL TRAINING &amp; AUTOMATION
   </text>
 
   <!-- Divider Line -->
-  <line x1="450" y1="305" x2="750" y2="305" stroke="url(#accentGrad)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="460" y1="305" x2="740" y2="305" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
 
   <!-- ================= TITLE & CALL TO ACTION ================= -->
-  <text x="600" y="375" fill="#f8fafc" font-size="36" font-weight="800" text-anchor="middle" letter-spacing="-0.5">
+  <text x="600" y="375" fill="#1e1b4b" font-size="36" font-weight="800" text-anchor="middle" letter-spacing="-0.5">
     Online Assessment Portal
   </text>
-  <text x="600" y="415" fill="#cbd5e1" font-size="20" font-weight="500" text-anchor="middle">
+  <text x="600" y="415" fill="#475569" font-size="20" font-weight="600" text-anchor="middle">
     Scan the QR code below to access your examination
   </text>
 
   <!-- ================= QR CARD CONTAINER ================= -->
-  <!-- Outer Glow Border Card -->
-  <rect x="250" y="470" width="700" height="700" rx="42" fill="none" stroke="url(#borderGrad)" stroke-width="3" filter="url(#glow)"/>
+  <!-- White Card with Soft Modern Shadow & Subtle Border -->
+  <rect x="250" y="470" width="700" height="700" rx="36" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" filter="url(#softCardShadow)"/>
 
-  <!-- Main Pure White QR Plate -->
-  <rect x="252" y="472" width="696" height="696" rx="40" fill="#ffffff" filter="url(#cardShadow)"/>
-
-  <!-- Inner Scan Target Brackets (Cyan & Indigo Accents) -->
-  <!-- Top-Left Bracket -->
+  <!-- Inner Scan Target Brackets (Indigo Accent) -->
+  <!-- Top-Left -->
   <path d="M 295 540 L 295 515 A 20 20 0 0 1 315 495 L 340 495" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round"/>
-  <!-- Top-Right Bracket -->
+  <!-- Top-Right -->
   <path d="M 860 495 L 885 495 A 20 20 0 0 1 905 515 L 905 540" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round"/>
-  <!-- Bottom-Left Bracket -->
+  <!-- Bottom-Left -->
   <path d="M 295 1100 L 295 1125 A 20 20 0 0 0 315 1145 L 340 1145" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round"/>
-  <!-- Bottom-Right Bracket -->
+  <!-- Bottom-Right -->
   <path d="M 860 1145 L 885 1145 A 20 20 0 0 0 905 1125 L 905 1100" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round"/>
 
   <!-- Render Scaled QR Code -->
@@ -103,53 +98,53 @@
     <path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#0f172a" d="M1 1.5h7m7 0h1m3 0h2m2 0h7M1 2.5h1m5 0h1m1 0h1m1 0h4m3 0h3m2 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h4m2 0h1m3 0h1m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m3 0h1m2 0h1m2 0h1m1 0h3m1 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h1m3 0h2m2 0h1m2 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m7 0h3m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 8.5h1m1 0h2m2 0h1m1 0h1m2 0h1M1 9.5h1m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m3 0h2m1 0h2m3 0h1m2 0h1M5 10.5h1m2 0h1m2 0h1m1 0h2m1 0h3m4 0h1m2 0h1m2 0h1M1 11.5h2m2 0h3m3 0h1m1 0h1m1 0h5m1 0h1m1 0h2m2 0h3M8 12.5h1m2 0h5m1 0h5m1 0h2m3 0h1M3 13.5h1m3 0h2m4 0h1m1 0h2m1 0h1m3 0h3m1 0h1m1 0h2M2 14.5h2m1 0h2m2 0h5m1 0h2m1 0h1m2 0h3m2 0h1m2 0h1M1 15.5h1m1 0h1m2 0h3m3 0h1m1 0h1m6 0h6m1 0h2M1 16.5h3m5 0h1m2 0h1m3 0h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h1M3 17.5h6m1 0h1m1 0h1m4 0h2m1 0h4m2 0h1m1 0h2M2 18.5h1m1 0h1m1 0h1m7 0h1m1 0h2m3 0h1m1 0h1m2 0h2m1 0h1M1 19.5h1m1 0h1m1 0h3m1 0h2m2 0h1m1 0h3m5 0h3m2 0h2M2 20.5h1m1 0h1m3 0h2m1 0h2m1 0h2m1 0h2m1 0h2m1 0h1m2 0h1m1 0h1M1 21.5h1m4 0h5m1 0h1m2 0h5m1 0h5M9 22.5h1m1 0h1m1 0h1m1 0h2m3 0h2m3 0h1m1 0h3M1 23.5h7m4 0h1m1 0h1m2 0h2m1 0h2m1 0h1m1 0h2m1 0h2M1 24.5h1m5 0h1m4 0h2m2 0h1m1 0h1m2 0h1m3 0h2m2 0h1M1 25.5h1m1 0h3m1 0h1m1 0h5m4 0h1m2 0h5m2 0h1M1 26.5h1m1 0h3m1 0h1m3 0h1m1 0h2m2 0h2m6 0h1m1 0h1M1 27.5h1m1 0h3m1 0h1m1 0h2m3 0h1m2 0h1m1 0h2m1 0h1m2 0h2m2 0h1M1 28.5h1m5 0h1m2 0h1m1 0h2m1 0h2m1 0h5m5 0h1M1 29.5h7m1 0h2m2 0h1m1 0h1m2 0h1m1 0h3m2 0h1m2 0h2"/>
   </g>
 
-  <!-- Center QR Badge -->
+  <!-- Center A5 Micro Badge -->
   <g transform="translate(600, 820)">
-    <circle cx="0" cy="0" r="42" fill="#ffffff" stroke="#e2e8f0" stroke-width="3"/>
-    <circle cx="0" cy="0" r="34" fill="url(#accentGrad)"/>
+    <circle cx="0" cy="0" r="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/>
+    <circle cx="0" cy="0" r="34" fill="url(#brandGrad)"/>
     <text x="0" y="8" fill="#ffffff" font-size="22" font-weight="900" text-anchor="middle">A5</text>
   </g>
 
   <!-- ================= DIRECT LINK CALLOUT PILL ================= -->
   <g transform="translate(600, 1220)">
-    <rect x="-240" y="-24" width="480" height="48" rx="24" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+    <rect x="-240" y="-24" width="480" height="48" rx="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
     <circle cx="-205" cy="0" r="6" fill="#10b981"/>
-    <text x="-185" y="6" fill="#94a3b8" font-size="15" font-weight="600">DIRECT LINK:</text>
-    <text x="25" y="6" fill="#38bdf8" font-size="16" font-weight="700">a5assessment.vercel.app</text>
+    <text x="-185" y="6" fill="#64748b" font-size="15" font-weight="700">DIRECT LINK:</text>
+    <text x="25" y="6" fill="#4338ca" font-size="16" font-weight="800">a5assessment.vercel.app</text>
   </g>
 
   <!-- ================= 3 EASY STEPS GUIDELINE ================= -->
   <g transform="translate(180, 1315)">
     <!-- Step 1 -->
     <g transform="translate(0, 0)">
-      <circle cx="35" cy="35" r="24" fill="#312e81" stroke="#4f46e5" stroke-width="2"/>
-      <text x="35" y="42" fill="#a5b4fc" font-size="18" font-weight="800" text-anchor="middle">1</text>
-      <text x="75" y="28" fill="#ffffff" font-size="17" font-weight="700">Open Camera</text>
-      <text x="75" y="50" fill="#94a3b8" font-size="13" font-weight="500">or QR Scanner app</text>
+      <circle cx="35" cy="35" r="24" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2"/>
+      <text x="35" y="42" fill="#4338ca" font-size="18" font-weight="800" text-anchor="middle">1</text>
+      <text x="75" y="28" fill="#0f172a" font-size="17" font-weight="700">Open Camera</text>
+      <text x="75" y="50" fill="#64748b" font-size="13" font-weight="500">or QR Scanner app</text>
     </g>
 
     <!-- Arrow 1 -->
-    <path d="M 255 35 L 275 35" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
-    <polyline points="270,30 276,35 270,40" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 255 35 L 275 35" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+    <polyline points="270,30 276,35 270,40" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
 
     <!-- Step 2 -->
     <g transform="translate(300, 0)">
-      <circle cx="35" cy="35" r="24" fill="#312e81" stroke="#4f46e5" stroke-width="2"/>
-      <text x="35" y="42" fill="#a5b4fc" font-size="18" font-weight="800" text-anchor="middle">2</text>
-      <text x="75" y="28" fill="#ffffff" font-size="17" font-weight="700">Scan QR Code</text>
-      <text x="75" y="50" fill="#94a3b8" font-size="13" font-weight="500">Tap the link popup</text>
+      <circle cx="35" cy="35" r="24" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2"/>
+      <text x="35" y="42" fill="#4338ca" font-size="18" font-weight="800" text-anchor="middle">2</text>
+      <text x="75" y="28" fill="#0f172a" font-size="17" font-weight="700">Scan QR Code</text>
+      <text x="75" y="50" fill="#64748b" font-size="13" font-weight="500">Tap the link popup</text>
     </g>
 
     <!-- Arrow 2 -->
-    <path d="M 555 35 L 575 35" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
-    <polyline points="570,30 576,35 570,40" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 555 35 L 575 35" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+    <polyline points="570,30 576,35 570,40" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
 
     <!-- Step 3 -->
     <g transform="translate(600, 0)">
-      <circle cx="35" cy="35" r="24" fill="#065f46" stroke="#10b981" stroke-width="2"/>
-      <text x="35" y="42" fill="#6ee7b7" font-size="18" font-weight="800" text-anchor="middle">3</text>
-      <text x="75" y="28" fill="#ffffff" font-size="17" font-weight="700">Start Test</text>
-      <text x="75" y="50" fill="#94a3b8" font-size="13" font-weight="500">Register &amp; begin exam</text>
+      <circle cx="35" cy="35" r="24" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="2"/>
+      <text x="35" y="42" fill="#047857" font-size="18" font-weight="800" text-anchor="middle">3</text>
+      <text x="75" y="28" fill="#0f172a" font-size="17" font-weight="700">Start Test</text>
+      <text x="75" y="50" fill="#64748b" font-size="13" font-weight="500">Register &amp; begin exam</text>
     </g>
   </g>
 
@@ -157,26 +152,26 @@
   <g transform="translate(600, 1460)">
     <!-- Badge 1: Anti-Cheat -->
     <g transform="translate(-270, 0)">
-      <rect x="-95" y="-18" width="190" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="0" y="5" fill="#cbd5e1" font-size="13" font-weight="600" text-anchor="middle">🛡️ Anti-Cheat Protected</text>
+      <rect x="-95" y="-18" width="190" height="36" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="0" y="5" fill="#334155" font-size="13" font-weight="700" text-anchor="middle">🛡️ Anti-Cheat Protected</text>
     </g>
 
-    <!-- Badge 2: Realtime Timer -->
+    <!-- Badge 2: Countdown Timer -->
     <g transform="translate(0, 0)">
-      <rect x="-90" y="-18" width="180" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="0" y="5" fill="#cbd5e1" font-size="13" font-weight="600" text-anchor="middle">⏱️ Countdown Timer</text>
+      <rect x="-90" y="-18" width="180" height="36" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="0" y="5" fill="#334155" font-size="13" font-weight="700" text-anchor="middle">⏱️ Countdown Timer</text>
     </g>
 
     <!-- Badge 3: Instant Evaluation -->
     <g transform="translate(260, 0)">
-      <rect x="-95" y="-18" width="190" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="0" y="5" fill="#cbd5e1" font-size="13" font-weight="600" text-anchor="middle">📊 Real-Time Evaluation</text>
+      <rect x="-95" y="-18" width="190" height="36" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="0" y="5" fill="#334155" font-size="13" font-weight="700" text-anchor="middle">📊 Real-Time Evaluation</text>
     </g>
   </g>
 
   <!-- ================= FOOTER ================= -->
-  <line x1="200" y1="1530" x2="1000" y2="1530" stroke="#334155" stroke-width="1"/>
-  <text x="600" y="1575" fill="#64748b" font-size="14" font-weight="500" text-anchor="middle">
+  <line x1="200" y1="1530" x2="1000" y2="1530" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="600" y="1575" fill="#94a3b8" font-size="14" font-weight="600" text-anchor="middle">
     © 2026 A5 Automation. All rights reserved. • Strictly for registered candidates.
   </text>
 </svg>
