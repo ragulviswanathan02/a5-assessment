@@ -120,8 +120,14 @@ export async function POST(request: Request) {
     // 4.5. Certificate Qualification Evaluation
     let certConfig = {
       enabled: !!(paper as any).certificate_enabled,
-      minMarks: Number((paper as any).certificate_min_marks) || 10,
-      minPercentage: Number((paper as any).certificate_min_percentage) || 60,
+      minMarks:
+        (paper as any).certificate_min_marks !== undefined && (paper as any).certificate_min_marks !== null
+          ? Number((paper as any).certificate_min_marks)
+          : 10,
+      minPercentage:
+        (paper as any).certificate_min_percentage !== undefined && (paper as any).certificate_min_percentage !== null
+          ? Number((paper as any).certificate_min_percentage)
+          : 0,
       title: (paper as any).certificate_title || paper.title || 'Industrial Automation Skill Training Program',
       signatory: (paper as any).certificate_signatory || 'Director',
       signatoryTitle: (paper as any).certificate_signatory_title || 'A5 Automation',
@@ -132,14 +138,30 @@ export async function POST(request: Request) {
         const match = paper.description.match(/\[CERT_CFG:(.*?)\]/);
         if (match && match[1]) {
           const parsed = JSON.parse(match[1]);
-          certConfig = { ...certConfig, ...parsed };
+          if (parsed.enabled !== undefined) certConfig.enabled = !!parsed.enabled;
+          if (parsed.minMarks !== undefined && parsed.minMarks !== null) certConfig.minMarks = Number(parsed.minMarks);
+          if (parsed.minPercentage !== undefined && parsed.minPercentage !== null) certConfig.minPercentage = Number(parsed.minPercentage);
+          if (parsed.title) certConfig.title = parsed.title;
+          if (parsed.signatory) certConfig.signatory = parsed.signatory;
+          if (parsed.signatoryTitle) certConfig.signatoryTitle = parsed.signatoryTitle;
         }
       } catch (e) {}
     }
 
+    const hasMarksCriteria = certConfig.minMarks > 0;
+    const hasPercentCriteria = certConfig.minPercentage > 0;
+
     const isQualified =
       certConfig.enabled &&
-      (grading.totalScore >= certConfig.minMarks || grading.percentage >= certConfig.minPercentage);
+      (
+        hasMarksCriteria && hasPercentCriteria
+          ? grading.totalScore >= certConfig.minMarks || grading.percentage >= certConfig.minPercentage
+          : hasMarksCriteria
+          ? grading.totalScore >= certConfig.minMarks
+          : hasPercentCriteria
+          ? grading.percentage >= certConfig.minPercentage
+          : true
+      );
 
     let certId = '';
     let certInfo: any = null;

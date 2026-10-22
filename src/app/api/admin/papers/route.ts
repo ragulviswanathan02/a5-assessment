@@ -36,10 +36,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Title is required' }, { status: 400 });
     }
 
+    const certMinMarks =
+      certificateMinMarks !== undefined && certificateMinMarks !== null && !isNaN(Number(certificateMinMarks))
+        ? Number(certificateMinMarks)
+        : 10;
+    const certMinPercentage =
+      certificateMinPercentage !== undefined && certificateMinPercentage !== null && !isNaN(Number(certificateMinPercentage))
+        ? Number(certificateMinPercentage)
+        : 0;
+
     const certConfig = {
       enabled: !!certificateEnabled,
-      minMarks: Number(certificateMinMarks) || 10,
-      minPercentage: Number(certificateMinPercentage) || 60,
+      minMarks: certMinMarks,
+      minPercentage: certMinPercentage,
       title: certificateTitle.trim() || title.trim(),
       signatory: certificateSignatory.trim() || 'Director',
       signatoryTitle: certificateSignatoryTitle.trim() || 'A5 Automation',
@@ -136,10 +145,19 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Paper ID and Title are required' }, { status: 400 });
     }
 
+    const certMinMarks =
+      certificateMinMarks !== undefined && certificateMinMarks !== null && !isNaN(Number(certificateMinMarks))
+        ? Number(certificateMinMarks)
+        : 10;
+    const certMinPercentage =
+      certificateMinPercentage !== undefined && certificateMinPercentage !== null && !isNaN(Number(certificateMinPercentage))
+        ? Number(certificateMinPercentage)
+        : 0;
+
     const certConfig = {
       enabled: !!certificateEnabled,
-      minMarks: Number(certificateMinMarks) || 10,
-      minPercentage: Number(certificateMinPercentage) || 60,
+      minMarks: certMinMarks,
+      minPercentage: certMinPercentage,
       title: certificateTitle.trim() || title.trim(),
       signatory: certificateSignatory.trim() || 'Director',
       signatoryTitle: certificateSignatoryTitle.trim() || 'A5 Automation',

@@ -21,12 +21,19 @@ interface Props {
   onSelectPaper: (id: string) => void;
 }
 
+// Helper to safely parse numeric settings without resetting 0 to fallback
+function parseNum(val: any, fallback: number): number {
+  if (val === undefined || val === null || val === '') return fallback;
+  const n = Number(val);
+  return isNaN(n) ? fallback : n;
+}
+
 // Helper to extract certificate config from paper
 function getPaperCert(p: Paper) {
   let cert = {
     enabled: !!p.certificate_enabled,
-    minMarks: Number(p.certificate_min_marks) || 10,
-    minPercentage: Number(p.certificate_min_percentage) || 60,
+    minMarks: parseNum(p.certificate_min_marks, 10),
+    minPercentage: parseNum(p.certificate_min_percentage, 0),
     title: p.certificate_title || p.title || 'Industrial Automation Skill Training Program',
     signatory: p.certificate_signatory || 'Director',
     signatoryTitle: p.certificate_signatory_title || 'A5 Automation',
@@ -36,7 +43,13 @@ function getPaperCert(p: Paper) {
     try {
       const match = p.description.match(/\[CERT_CFG:(.*?)\]/);
       if (match && match[1]) {
-        cert = { ...cert, ...JSON.parse(match[1]) };
+        const parsed = JSON.parse(match[1]);
+        if (parsed.enabled !== undefined) cert.enabled = !!parsed.enabled;
+        if (parsed.minMarks !== undefined && parsed.minMarks !== null) cert.minMarks = parseNum(parsed.minMarks, cert.minMarks);
+        if (parsed.minPercentage !== undefined && parsed.minPercentage !== null) cert.minPercentage = parseNum(parsed.minPercentage, 0);
+        if (parsed.title) cert.title = parsed.title;
+        if (parsed.signatory) cert.signatory = parsed.signatory;
+        if (parsed.signatoryTitle) cert.signatoryTitle = parsed.signatoryTitle;
       }
     } catch (e) {}
   }
@@ -58,8 +71,8 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
 
   // Certificate Form State
   const [certificateEnabled, setCertificateEnabled] = useState(false);
-  const [certificateMinMarks, setCertificateMinMarks] = useState(10);
-  const [certificateMinPercentage, setCertificateMinPercentage] = useState(60);
+  const [certificateMinMarks, setCertificateMinMarks] = useState<number | string>(10);
+  const [certificateMinPercentage, setCertificateMinPercentage] = useState<number | string>(0);
   const [certificateTitle, setCertificateTitle] = useState('');
   const [certificateSignatory, setCertificateSignatory] = useState('Director');
   const [certificateSignatoryTitle, setCertificateSignatoryTitle] = useState('A5 Automation');
@@ -74,7 +87,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
     setTrackTabSwitches(true);
     setCertificateEnabled(false);
     setCertificateMinMarks(10);
-    setCertificateMinPercentage(60);
+    setCertificateMinPercentage(0);
     setCertificateTitle('');
     setCertificateSignatory('Director');
     setCertificateSignatoryTitle('A5 Automation');
@@ -144,8 +157,8 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
         showResultsImmediately,
         trackTabSwitches,
         certificateEnabled,
-        certificateMinMarks: Number(certificateMinMarks) || 0,
-        certificateMinPercentage: Number(certificateMinPercentage) || 0,
+        certificateMinMarks: certificateMinMarks !== '' ? Math.max(0, Number(certificateMinMarks)) : 10,
+        certificateMinPercentage: certificateMinPercentage !== '' ? Math.max(0, Number(certificateMinPercentage)) : 0,
         certificateTitle: certificateTitle.trim() || title.trim(),
         certificateSignatory: certificateSignatory.trim() || 'Director',
         certificateSignatoryTitle: certificateSignatoryTitle.trim() || 'A5 Automation',
@@ -461,10 +474,11 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                           type="number"
                           min="0"
                           value={certificateMinMarks}
-                          onChange={(e) => setCertificateMinMarks(Number(e.target.value))}
+                          onChange={(e) => setCertificateMinMarks(e.target.value)}
                           placeholder="10"
                           className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
                         />
+                        <p className="text-[10px] text-slate-500 mt-1">Marks threshold (e.g. 10). Set to 0 if not used.</p>
                       </div>
 
                       <div>
@@ -476,10 +490,11 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                           min="0"
                           max="100"
                           value={certificateMinPercentage}
-                          onChange={(e) => setCertificateMinPercentage(Number(e.target.value))}
-                          placeholder="60"
+                          onChange={(e) => setCertificateMinPercentage(e.target.value)}
+                          placeholder="0"
                           className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
                         />
+                        <p className="text-[10px] text-slate-500 mt-1">Percentage threshold (e.g. 60%). Set to 0 to disable.</p>
                       </div>
                     </div>
 
@@ -527,7 +542,13 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                     <div className="bg-amber-100/60 p-2.5 rounded-lg text-[11px] text-amber-900 flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
                       <span>
-                        Students who score ≥ {certificateMinMarks} marks can view and download their verified certificate with MSME &amp; ISO 9001:2015 accreditations.
+                        {Number(certificateMinMarks) > 0 && Number(certificateMinPercentage) > 0
+                          ? `Students who score ≥ ${certificateMinMarks} marks OR ≥ ${certificateMinPercentage}% can view and download their verified certificate.`
+                          : Number(certificateMinMarks) > 0
+                          ? `Students who score ≥ ${certificateMinMarks} marks can view and download their verified certificate.`
+                          : Number(certificateMinPercentage) > 0
+                          ? `Students who score ≥ ${certificateMinPercentage}% can view and download their verified certificate.`
+                          : `All students completing the assessment will receive their verified certificate.`}
                       </span>
                     </div>
                   </div>

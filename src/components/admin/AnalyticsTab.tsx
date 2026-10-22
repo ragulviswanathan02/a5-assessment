@@ -38,12 +38,18 @@ interface Props {
   submissions: Submission[];
 }
 
+function parseNum(val: any, fallback: number): number {
+  if (val === undefined || val === null || val === '') return fallback;
+  const n = Number(val);
+  return isNaN(n) ? fallback : n;
+}
+
 function getPaperCert(p?: Paper) {
   if (!p) {
     return {
       enabled: false,
       minMarks: 10,
-      minPercentage: 60,
+      minPercentage: 0,
       title: 'Industrial Automation Skill Training Program',
       signatory: 'Director',
       signatoryTitle: 'A5 Automation',
@@ -51,8 +57,8 @@ function getPaperCert(p?: Paper) {
   }
   let cert = {
     enabled: !!p.certificate_enabled,
-    minMarks: Number(p.certificate_min_marks) || 10,
-    minPercentage: Number(p.certificate_min_percentage) || 60,
+    minMarks: parseNum(p.certificate_min_marks, 10),
+    minPercentage: parseNum(p.certificate_min_percentage, 0),
     title: p.certificate_title || p.title || 'Industrial Automation Skill Training Program',
     signatory: p.certificate_signatory || 'Director',
     signatoryTitle: p.certificate_signatory_title || 'A5 Automation',
@@ -61,7 +67,13 @@ function getPaperCert(p?: Paper) {
     try {
       const match = p.description.match(/\[CERT_CFG:(.*?)\]/);
       if (match && match[1]) {
-        cert = { ...cert, ...JSON.parse(match[1]) };
+        const parsed = JSON.parse(match[1]);
+        if (parsed.enabled !== undefined) cert.enabled = !!parsed.enabled;
+        if (parsed.minMarks !== undefined && parsed.minMarks !== null) cert.minMarks = parseNum(parsed.minMarks, cert.minMarks);
+        if (parsed.minPercentage !== undefined && parsed.minPercentage !== null) cert.minPercentage = parseNum(parsed.minPercentage, 0);
+        if (parsed.title) cert.title = parsed.title;
+        if (parsed.signatory) cert.signatory = parsed.signatory;
+        if (parsed.signatoryTitle) cert.signatoryTitle = parsed.signatoryTitle;
       }
     } catch (e) {}
   }
@@ -418,7 +430,18 @@ export default function AnalyticsTab({
             <tbody className="divide-y divide-slate-100">
               {searchedSubmissions.map((sub) => {
                 const certInfo = (sub.student_data as any)?._certificate;
-                const isEligible = certInfo?.issued || sub.certificate_issued || (currentCert.enabled && sub.total_score >= currentCert.minMarks);
+                const hasMarks = currentCert.minMarks > 0;
+                const hasPercent = currentCert.minPercentage > 0;
+                const satisfiesCutoff = currentCert.enabled && (
+                  hasMarks && hasPercent
+                    ? sub.total_score >= currentCert.minMarks || sub.percentage >= currentCert.minPercentage
+                    : hasMarks
+                    ? sub.total_score >= currentCert.minMarks
+                    : hasPercent
+                    ? sub.percentage >= currentCert.minPercentage
+                    : true
+                );
+                const isEligible = certInfo?.issued || sub.certificate_issued || satisfiesCutoff;
                 const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : '');
 
                 return (
