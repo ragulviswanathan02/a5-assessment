@@ -58,6 +58,103 @@ export default function CertificateModal({ data, onClose }: Props) {
       ? titleText.trim()
       : `${titleText.trim()} Assessment`;
 
+  const handlePrint = () => {
+    const certElement = certRef.current;
+    if (!certElement) {
+      window.print();
+      return;
+    }
+
+    // Create an isolated hidden iframe for single-page, zero-overflow printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Certificate - ${displayName.replace(/[^a-zA-Z0-9]/g, '_')}</title>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" />
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 0 !important;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100%;
+              height: 100%;
+              overflow: hidden !important;
+              background: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .cert-print-stage {
+              width: 100vw;
+              height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+              margin: 0;
+              padding: 0;
+            }
+            .cert-scaler {
+              width: 1024px;
+              height: 679px;
+              position: relative;
+              /* Scale 1024x679 cleanly to fit A4 landscape (approx 1123 x 744 px) */
+              transform: scale(min(calc(100vw / 1024), calc(100vh / 679)));
+              transform-origin: center center;
+              box-shadow: none !important;
+              flex-shrink: 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="cert-print-stage">
+            <div class="cert-scaler">
+              ${certElement.innerHTML}
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    // Allow browser time to parse fonts and layout before opening print dialog
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 1500);
+    }, 400);
+  };
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 50,
@@ -106,7 +203,7 @@ export default function CertificateModal({ data, onClose }: Props) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
-              onClick={() => window.print()}
+              onClick={handlePrint}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '6px',
                 padding: '6px 16px', borderRadius: '8px',
@@ -150,17 +247,30 @@ export default function CertificateModal({ data, onClose }: Props) {
               width: '1024px',
               height: '679px',
               position: 'relative',
-              backgroundImage: "url('/a5a-certificate-base.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
               fontFamily: "'Montserrat','Segoe UI',sans-serif",
               color: '#0c2340',
               flexShrink: 0,
               boxShadow: '0 25px 60px rgba(0,0,0,0.45)',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
+            {/* Explicit base frame artwork image tag — prints reliably in all browsers even if 'Background graphics' is turned off */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/a5a-certificate-base.png"
+              alt="Certificate Frame"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'fill',
+                zIndex: 0,
+                pointerEvents: 'none',
+              }}
+            />
+
             {/* ── Flowing Content Area (balanced vertical rhythm with comfortable clearance above bottom seal) ── */}
             <div style={{
               position: 'absolute',
@@ -171,6 +281,7 @@ export default function CertificateModal({ data, onClose }: Props) {
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
+              zIndex: 1,
             }}>
 
               {/* Official Academy Header Logo */}
@@ -348,40 +459,75 @@ export default function CertificateModal({ data, onClose }: Props) {
 
             </div>
 
-            {/* Date positioned directly under the gold line on the right */}
-            <p style={{
+            {/* Date with elegant gold rule on the right */}
+            <div style={{
               position: 'absolute',
-              top: '585px',
+              top: '574px',
               left: '576px',
               width: '232px',
-              textAlign: 'center',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#1e293b',
-              margin: 0,
-              letterSpacing: '0.2px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              zIndex: 1,
             }}>
-              Date of Assessment: <strong style={{ color: '#0c2340', fontWeight: 800 }}>{formattedDate}</strong>
-            </p>
+              <div style={{
+                width: '180px',
+                height: '1.2px',
+                background: 'linear-gradient(90deg, transparent 0%, #c8a84b 20%, #e5c365 50%, #c8a84b 80%, transparent 100%)',
+                marginBottom: '5px',
+              }} />
+              <p style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#1e293b',
+                margin: 0,
+                letterSpacing: '0.2px',
+                whiteSpace: 'nowrap',
+              }}>
+                Date of Assessment: <strong style={{ color: '#0c2340', fontWeight: 800 }}>{formattedDate}</strong>
+              </p>
+            </div>
 
           </div>{/* end certificate */}
         </div>{/* end scroll area */}
       </div>{/* end modal shell */}
 
       <style jsx global>{`
-        @page { size: A4 landscape; margin: 0; }
+        @page {
+          size: A4 landscape;
+          margin: 0 !important;
+        }
         @media print {
-          html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-          body * { visibility: hidden !important; }
+          html, body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+          }
+          body * {
+            visibility: hidden !important;
+          }
           #printable-certificate,
-          #printable-certificate * { visibility: visible !important; }
+          #printable-certificate * {
+            visibility: visible !important;
+          }
           #printable-certificate {
-            position: fixed !important; inset: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            margin: 0 !important; padding: 0 !important;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) scale(1.08) !important;
+            transform-origin: center center !important;
+            width: 1024px !important;
+            height: 679px !important;
+            margin: 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
