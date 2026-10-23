@@ -60,10 +60,10 @@ export default function AdminDashboardPage() {
     verifyAuth();
   }, [router]);
 
-  // 2. Fetch Data
-  const fetchData = useCallback(async () => {
+  // 2. Fetch Data (with silent background update support)
+  const fetchData = useCallback(async (showSpinner = true) => {
     try {
-      setLoadingData(true);
+      if (showSpinner) setLoadingData(true);
 
       // Fetch all papers
       const { data: pList, error: pError } = await supabase
@@ -108,14 +108,42 @@ export default function AdminDashboardPage() {
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
-      setLoadingData(false);
+      if (showSpinner) setLoadingData(false);
     }
   }, [selectedPaperId]);
 
+  // Initial load
   useEffect(() => {
     if (!checkingAuth) {
-      fetchData();
+      fetchData(true);
     }
+  }, [checkingAuth, fetchData]);
+
+  // 3. Live Auto-Sync: Realtime Supabase Channel + 15s background sync
+  useEffect(() => {
+    if (checkingAuth) return;
+
+    // Realtime listener for incoming student submissions
+    const channel = supabase
+      .channel('realtime-admin-submissions')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'submissions' },
+        () => {
+          fetchData(false);
+        }
+      )
+      .subscribe();
+
+    // 15-second background auto-sync fallback
+    const interval = setInterval(() => {
+      fetchData(false);
+    }, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [checkingAuth, fetchData]);
 
   // Refresh sub-data when paper selector changes
@@ -211,7 +239,7 @@ export default function AdminDashboardPage() {
 
           <div className="flex items-center gap-2 self-end sm:self-center">
             <button
-              onClick={fetchData}
+              onClick={() => fetchData(true)}
               disabled={loadingData}
               className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
               title="Refresh Data"
