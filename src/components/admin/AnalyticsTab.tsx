@@ -526,19 +526,144 @@ export default function AnalyticsTab({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        {/* Mobile View: Clean card list for screens < 768px */}
+        <div className="block md:hidden space-y-3">
+          {searchedSubmissions.map((sub) => {
+            const isEligible = checkSubmissionEligibility(sub, currentCert);
+            const certInfo = (sub.student_data as any)?._certificate;
+            const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : '');
+
+            return (
+              <div key={sub.id} className="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-bold text-slate-900 leading-tight truncate">{sub.student_name}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">{sub.student_college || 'No institution provided'}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        sub.percentage >= 75
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : sub.percentage >= 40
+                          ? 'bg-indigo-50 text-indigo-700'
+                          : 'bg-rose-50 text-rose-700'
+                      }`}
+                    >
+                      {sub.percentage}%
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {new Date(sub.submitted_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-100">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Score</span>
+                    <span className="font-bold text-slate-800">{sub.total_score} / {sub.max_score}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Status</span>
+                    {isEligible ? (
+                      <span className="inline-flex items-center gap-1 text-amber-700 font-bold text-[11px]">
+                        <Award className="w-3 h-3 text-amber-600" />
+                        <span>Qualified</span>
+                      </span>
+                    ) : currentCert.enabled ? (
+                      <span className="text-slate-400 text-[11px]">Below Cutoff</span>
+                    ) : (
+                      <span className="text-slate-400 text-[11px]">—</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Contact</span>
+                    <span className="text-slate-700 truncate block">{sub.student_phone || sub.student_email || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Tab Switches</span>
+                    {sub.tab_switch_count > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
+                        <AlertTriangle className="w-3 h-3" />
+                        {sub.tab_switch_count} violations
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">0 violations</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Action Buttons */}
+                <div className="flex items-center gap-2 pt-1">
+                  {isEligible && (
+                    <button
+                      onClick={() =>
+                        setActiveCertData({
+                          id: certId,
+                          studentName: sub.student_name,
+                          studentCollege: sub.student_college,
+                          paperTitle: currentCert.title,
+                          score: sub.total_score,
+                          maxScore: sub.max_score,
+                          percentage: sub.percentage,
+                          cutoffPercentage: currentCert.minPercentage,
+                          cutoffMarks: currentCert.minMarks,
+                          issueDate: sub.submitted_at,
+                        })
+                      }
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-xs font-bold cursor-pointer transition-colors"
+                    >
+                      <Award className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Cert</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setInspectSubmission(sub)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Details</span>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSubmission(sub)}
+                    disabled={deletingId === sub.id}
+                    className="inline-flex items-center justify-center gap-1 py-2 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+                    title="Delete submission"
+                  >
+                    {deletingId === sub.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {searchedSubmissions.length === 0 && (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No matching student records found.
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Full Width Table with Sticky Actions */}
+        <div className="hidden md:block overflow-x-auto rounded-xl">
+          <table className="w-full text-left text-xs border-collapse min-w-[1100px]">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-600 font-semibold">
-                <th className="py-2.5 px-3">Student Name</th>
-                <th className="py-2.5 px-3">College</th>
-                <th className="py-2.5 px-3">Contact</th>
-                <th className="py-2.5 px-3 text-center">Score</th>
-                <th className="py-2.5 px-3 text-center">Percentage</th>
-                <th className="py-2.5 px-3 text-center">Certificate</th>
-                <th className="py-2.5 px-3 text-center">Tab Switches</th>
-                <th className="py-2.5 px-3">Date</th>
-                <th className="py-2.5 px-3 text-right">Actions</th>
+              <tr className="border-b border-slate-100 bg-slate-50/90 text-slate-600 font-semibold">
+                <th className="py-3 px-3.5 whitespace-nowrap min-w-[150px]">Student Name</th>
+                <th className="py-3 px-3.5 min-w-[170px]">College</th>
+                <th className="py-3 px-3.5 whitespace-nowrap min-w-[160px]">Contact</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap min-w-[80px]">Score</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap min-w-[85px]">Percentage</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap min-w-[95px]">Certificate</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap min-w-[90px]">Tab Switches</th>
+                <th className="py-3 px-3.5 whitespace-nowrap min-w-[95px]">Date</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap sticky right-0 bg-slate-50 z-20 shadow-[-6px_0_12px_rgba(0,0,0,0.04)] min-w-[210px]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -548,19 +673,19 @@ export default function AnalyticsTab({
                 const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : '');
 
                 return (
-                  <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 font-medium text-slate-900">{sub.student_name}</td>
-                    <td className="py-3 px-3 text-slate-600 max-w-xs truncate">
+                  <tr key={sub.id} className="hover:bg-slate-50/90 group transition-colors">
+                    <td className="py-3 px-3.5 font-medium text-slate-900 whitespace-nowrap">{sub.student_name}</td>
+                    <td className="py-3 px-3.5 text-slate-600 max-w-[220px] truncate" title={sub.student_college || ''}>
                       {sub.student_college || '—'}
                     </td>
-                    <td className="py-3 px-3 text-slate-500">
+                    <td className="py-3 px-3.5 text-slate-500 whitespace-nowrap">
                       <div>{sub.student_phone || '—'}</div>
                       <div className="text-[11px] text-slate-400">{sub.student_email || '—'}</div>
                     </td>
-                    <td className="py-3 px-3 text-center font-bold text-slate-900">
+                    <td className="py-3 px-3 text-center font-bold text-slate-900 whitespace-nowrap">
                       {sub.total_score} / {sub.max_score}
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
                           sub.percentage >= 75
@@ -573,7 +698,7 @@ export default function AnalyticsTab({
                         {sub.percentage}%
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
                       {isEligible ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold border border-amber-200">
                           <Award className="w-3 h-3 text-amber-600" />
@@ -585,7 +710,7 @@ export default function AnalyticsTab({
                         <span className="text-[11px] text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
                       {sub.tab_switch_count > 0 ? (
                         <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
                           <AlertTriangle className="w-3 h-3" />
@@ -595,10 +720,10 @@ export default function AnalyticsTab({
                         <span className="text-slate-400">0</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
+                    <td className="py-3 px-3.5 text-slate-500 whitespace-nowrap">
                       {new Date(sub.submitted_at).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="py-3 px-4 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 z-20 shadow-[-6px_0_12px_rgba(0,0,0,0.04)] min-w-[210px]">
                       <div className="flex items-center justify-end gap-1.5">
                         {isEligible && (
                           <button

@@ -221,8 +221,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
       {/* Top Admin Navbar */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 shadow-2xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-6 py-3 shadow-2xs">
+        <div className="max-w-[1720px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -280,7 +280,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pt-3 border-t border-slate-100 mt-2">
+        <div className="max-w-[1720px] mx-auto flex items-center gap-2 overflow-x-auto pt-3 border-t border-slate-100 mt-2">
           <button
             onClick={() => setActiveTab('analytics')}
             className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
@@ -332,7 +332,7 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6">
+      <main className="flex-1 max-w-[1720px] mx-auto w-full p-3 sm:p-5 md:p-6 lg:p-8">
         {loadingData && papers.length === 0 ? (
           <div className="py-20 text-center">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
