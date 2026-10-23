@@ -177,6 +177,8 @@ export async function POST(request: Request) {
         score: grading.totalScore,
         maxScore: grading.maxScore,
         percentage: grading.percentage,
+        minPercentage: certConfig.minPercentage || 70,
+        minMarks: certConfig.minMarks || 0,
         issueDate: new Date().toISOString(),
         signatory: certConfig.signatory,
         signatoryTitle: certConfig.signatoryTitle,
@@ -263,15 +265,13 @@ export async function POST(request: Request) {
       showResultsImmediately: paper.show_results_immediately,
       certificateEligible: isQualified,
       certificate: certInfo,
-      result: paper.show_results_immediately
-        ? {
-            totalScore: grading.totalScore,
-            maxScore: grading.maxScore,
-            percentage: grading.percentage,
-            topicScores: grading.topicScores,
-            certificate: certInfo,
-          }
-        : null,
+      result: {
+        totalScore: grading.totalScore,
+        maxScore: grading.maxScore,
+        percentage: grading.percentage,
+        topicScores: paper.show_results_immediately ? grading.topicScores : {},
+        certificate: certInfo,
+      },
     });
   } catch (error: any) {
     console.error('Submission API Error:', error);

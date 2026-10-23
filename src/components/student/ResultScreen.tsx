@@ -101,7 +101,7 @@ export default function ResultScreen({
           <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-center text-xs text-slate-600 flex items-center justify-center gap-2">
             <Award className="w-4 h-4 text-slate-400 shrink-0" />
             <span>
-              Certificate passing cutoff is <strong>{certData.minMarks} marks</strong> ({certData.minPercentage}%). You scored {result?.totalScore} marks.
+              Certificate qualifying cutoff is <strong>{certData.minPercentage || 70}%</strong>. You scored {result?.percentage}%.
             </span>
           </div>
         )}
