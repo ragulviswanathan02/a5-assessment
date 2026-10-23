@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, Printer, Award } from 'lucide-react';
 
 export interface CertificateData {
@@ -56,6 +56,16 @@ export default function CertificateModal({ data, onClose }: Props) {
   const qualificationAssessmentTitle = `${cleanTitle} Assessment`;
   const collegeText = data.studentCollege || 'Your Institution';
   const displayName = formatDisplayName(data.studentName);
+  const pdfFileName = `${displayName} - A5 Automation Certificate`;
+
+  // Dynamically set document title while modal is open so browser Save As PDF defaults to candidate name
+  useEffect(() => {
+    const originalTitle = document.title;
+    document.title = pdfFileName;
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [pdfFileName]);
 
   const handlePrint = () => {
     const certElement = certRef.current;
@@ -86,7 +96,7 @@ export default function CertificateModal({ data, onClose }: Props) {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Certificate - ${displayName.replace(/[^a-zA-Z0-9]/g, '_')}</title>
+          <title>${pdfFileName}</title>
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" />
           <style>
             @page {
