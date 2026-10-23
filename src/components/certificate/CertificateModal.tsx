@@ -50,13 +50,12 @@ export default function CertificateModal({ data, onClose }: Props) {
       ? `${data.cutoffMarks} Marks`
       : '70%';
 
-  const titleText = data.paperTitle || 'Industrial Automation Aptitude';
+  const rawTitle = data.paperTitle || 'Industrial Automation Aptitude';
+  const cleanTitle = rawTitle.trim().replace(/(?:\s+Assessment)+$/i, '');
+  const titleText = `${cleanTitle} ASSESSMENT`;
+  const qualificationAssessmentTitle = `${cleanTitle} Assessment`;
   const collegeText = data.studentCollege || 'Your Institution';
   const displayName = formatDisplayName(data.studentName);
-  const qualificationAssessmentTitle =
-    titleText.trim().toLowerCase().endsWith('assessment')
-      ? titleText.trim()
-      : `${titleText.trim()} Assessment`;
 
   const handlePrint = () => {
     const certElement = certRef.current;
@@ -102,23 +101,29 @@ export default function CertificateModal({ data, onClose }: Props) {
             html, body {
               margin: 0 !important;
               padding: 0 !important;
-              width: 100%;
-              height: 100%;
+              width: 100vw !important;
+              height: 100vh !important;
+              max-height: 100vh !important;
               overflow: hidden !important;
-              background: #fff;
+              background: #fff !important;
               display: flex;
               align-items: center;
               justify-content: center;
+              page-break-after: avoid !important;
+              break-after: avoid !important;
             }
             .cert-print-stage {
               width: 100vw;
               height: 100vh;
+              max-height: 100vh;
               display: flex;
               align-items: center;
               justify-content: center;
               overflow: hidden;
               margin: 0;
               padding: 0;
+              page-break-after: avoid !important;
+              break-after: avoid !important;
             }
             .cert-scaler {
               width: 1024px;
@@ -129,6 +134,8 @@ export default function CertificateModal({ data, onClose }: Props) {
               transform-origin: center center;
               box-shadow: none !important;
               flex-shrink: 0;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
           </style>
         </head>
