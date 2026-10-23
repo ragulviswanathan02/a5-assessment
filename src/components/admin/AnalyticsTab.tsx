@@ -82,8 +82,9 @@ function getPaperCert(p?: Paper) {
 
 function checkSubmissionEligibility(sub: Submission, cert: ReturnType<typeof getPaperCert>): boolean {
   const certInfo = (sub.student_data as any)?._certificate;
-  if (certInfo?.issued !== undefined) return !!certInfo.issued;
-  if (sub.certificate_issued !== undefined && sub.certificate_issued !== null) return !!sub.certificate_issued;
+  // If already marked as issued in database, always honor it
+  if (certInfo?.issued === true || sub.certificate_issued === true) return true;
+  // If certificates are completely disabled on this paper
   if (!cert.enabled) return false;
 
   const hasMarks = cert.minMarks > 0;
