@@ -31,6 +31,9 @@ import {
   ShieldCheck,
   Trash2,
   Loader2,
+  Filter,
+  Building2,
+  RotateCcw,
 } from 'lucide-react';
 
 interface Props {
@@ -112,9 +115,18 @@ export default function AnalyticsTab({
   onRefresh,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCollege, setSelectedCollege] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'qualified' | 'not_qualified'>('all');
   const [inspectSubmission, setInspectSubmission] = useState<Submission | null>(null);
   const [activeCertData, setActiveCertData] = useState<CertificateData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Reset filters when changing active question paper
+  React.useEffect(() => {
+    setSelectedCollege('all');
+    setSelectedStatus('all');
+    setSearchQuery('');
+  }, [selectedPaperId]);
 
   const handleDeleteSubmission = async (sub: Submission) => {
     const confirmed = window.confirm(
@@ -154,25 +166,70 @@ export default function AnalyticsTab({
     return submissions.filter((sub) => sub.paper_id === selectedPaperId);
   }, [submissions, selectedPaperId]);
 
-  // Search filtered & sorted by score descending (highest score first)
+  // Distinct list of colleges with counts for dropdown filter
+  const availableColleges = useMemo(() => {
+    const counts = new Map<string, number>();
+    filteredSubmissions.forEach((sub) => {
+      const col = (sub.student_college || '').trim();
+      if (col) {
+        counts.set(col, (counts.get(col) || 0) + 1);
+      }
+    });
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [filteredSubmissions]);
+
+  // Qualified vs Not-Qualified counts for current paper
+  const { qualifiedCount, notQualifiedCount } = useMemo(() => {
+    let q = 0;
+    let nq = 0;
+    filteredSubmissions.forEach((sub) => {
+      if (checkSubmissionEligibility(sub, currentCert)) {
+        q++;
+      } else {
+        nq++;
+      }
+    });
+    return { qualifiedCount: q, notQualifiedCount: nq };
+  }, [filteredSubmissions, currentCert]);
+
+  // Search & Filtered submissions: by College, Qualification Status, and Search Query
   const searchedSubmissions = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const list = !q
-      ? filteredSubmissions
-      : filteredSubmissions.filter(
-          (sub) =>
-            sub.student_name.toLowerCase().includes(q) ||
-            sub.student_email.toLowerCase().includes(q) ||
-            sub.student_phone.toLowerCase().includes(q) ||
-            sub.student_college.toLowerCase().includes(q)
-        );
+
+    const list = filteredSubmissions.filter((sub) => {
+      // 1. College filter
+      if (selectedCollege !== 'all') {
+        const subCol = (sub.student_college || '').trim();
+        if (subCol !== selectedCollege) return false;
+      }
+
+      // 2. Qualification status filter
+      if (selectedStatus !== 'all') {
+        const isEligible = checkSubmissionEligibility(sub, currentCert);
+        if (selectedStatus === 'qualified' && !isEligible) return false;
+        if (selectedStatus === 'not_qualified' && isEligible) return false;
+      }
+
+      // 3. Search query
+      if (q) {
+        const matchName = (sub.student_name || '').toLowerCase().includes(q);
+        const matchEmail = (sub.student_email || '').toLowerCase().includes(q);
+        const matchPhone = (sub.student_phone || '').toLowerCase().includes(q);
+        const matchCollege = (sub.student_college || '').toLowerCase().includes(q);
+        if (!matchName && !matchEmail && !matchPhone && !matchCollege) return false;
+      }
+
+      return true;
+    });
 
     return [...list].sort((a, b) => {
       if (b.total_score !== a.total_score) return b.total_score - a.total_score;
       if ((b.percentage || 0) !== (a.percentage || 0)) return (b.percentage || 0) - (a.percentage || 0);
       return (a.time_taken_seconds || 0) - (b.time_taken_seconds || 0);
     });
-  }, [filteredSubmissions, searchQuery]);
+  }, [filteredSubmissions, selectedCollege, selectedStatus, searchQuery, currentCert]);
 
   // Metrics with dynamic pass cutoff from paper settings
   const metrics = useMemo(() => {
@@ -267,10 +324,11 @@ export default function AnalyticsTab({
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredSubmissions]);
 
-  // Export to Excel / CSV with proper competition rank sorting
+  // Export to Excel / CSV with proper competition rank sorting (respects active college & qualification filters)
   const handleExportExcel = () => {
-    if (filteredSubmissions.length === 0) {
-      alert('No submission data available to export.');
+    const listToExport = searchedSubmissions;
+    if (listToExport.length === 0) {
+      alert('No submission data matches the selected filters to export.');
       return;
     }
 
@@ -279,7 +337,7 @@ export default function AnalyticsTab({
     // 2. Percentage DESC
     // 3. Time taken ASC (tie-breaker: faster attempt gets higher rank)
     // 4. Submitted at ASC (earlier attempt gets higher rank)
-    const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
+    const sortedSubmissions = [...listToExport].sort((a, b) => {
       if (b.total_score !== a.total_score) {
         return b.total_score - a.total_score;
       }
@@ -349,7 +407,14 @@ export default function AnalyticsTab({
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates Results');
 
     const selectedPaper = papers.find((p) => p.id === selectedPaperId);
-    const fileName = `${(selectedPaper?.title || 'Assessment').replace(/[^a-zA-Z0-9]/g, '_')}_Results.xlsx`;
+    let filterTag = '';
+    if (selectedCollege !== 'all') {
+      filterTag += `_${selectedCollege.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_')}`;
+    }
+    if (selectedStatus !== 'all') {
+      filterTag += `_${selectedStatus === 'qualified' ? 'Qualified' : 'BelowCutoff'}`;
+    }
+    const fileName = `${(selectedPaper?.title || 'Assessment').replace(/[^a-zA-Z0-9]/g, '_')}${filterTag}_Results.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
 
@@ -379,9 +444,15 @@ export default function AnalyticsTab({
         <button
           onClick={handleExportExcel}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+          title="Export currently filtered list of candidates to Excel"
         >
           <Download className="w-4 h-4" />
-          <span>Export to Excel (XLSX)</span>
+          <span>
+            Export to Excel (XLSX){' '}
+            {searchedSubmissions.length < filteredSubmissions.length
+              ? `(${searchedSubmissions.length} Filtered)`
+              : `(${filteredSubmissions.length})`}
+          </span>
         </button>
       </div>
 
@@ -508,21 +579,89 @@ export default function AnalyticsTab({
 
       {/* Student Submissions Table */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Student Submissions Directory</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">Student Submissions Directory</h3>
+              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                {searchedSubmissions.length} of {filteredSubmissions.length}
+              </span>
+            </div>
             <p className="text-xs text-slate-500">Comprehensive list of candidate attempts and contact records</p>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search by name, college..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+          {/* Filter Toolbar: College, Qualification Status, Search & Export */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* College Filter Dropdown */}
+            <div className="relative min-w-[170px] flex-1 sm:flex-initial">
+              <select
+                value={selectedCollege}
+                onChange={(e) => setSelectedCollege(e.target.value)}
+                className="w-full appearance-none pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                title="Filter by Candidate College"
+              >
+                <option value="all">All Colleges ({filteredSubmissions.length})</option>
+                {availableColleges.map((col) => (
+                  <option key={col.name} value={col.name}>
+                    {col.name} ({col.count})
+                  </option>
+                ))}
+              </select>
+              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            </div>
+
+            {/* Qualification Filter Dropdown */}
+            <div className="relative min-w-[160px] flex-1 sm:flex-initial">
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value as any)}
+                className="w-full appearance-none pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                title="Filter by Qualification Status"
+              >
+                <option value="all">All Candidates ({filteredSubmissions.length})</option>
+                <option value="qualified">Qualified ({qualifiedCount})</option>
+                <option value="not_qualified">Below Cutoff ({notQualifiedCount})</option>
+              </select>
+              <Filter className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-52">
+              <input
+                type="text"
+                placeholder="Search name, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            </div>
+
+            {/* Reset Filters Button */}
+            {(selectedCollege !== 'all' || selectedStatus !== 'all' || searchQuery.trim() !== '') && (
+              <button
+                onClick={() => {
+                  setSelectedCollege('all');
+                  setSelectedStatus('all');
+                  setSearchQuery('');
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold transition-all cursor-pointer"
+                title="Clear all active filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+
+            {/* Table Export XLSX button */}
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+              title="Export currently filtered candidates to Excel"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export XLSX</span>
+            </button>
           </div>
         </div>
 
