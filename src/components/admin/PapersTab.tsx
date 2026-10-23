@@ -157,8 +157,8 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
         showResultsImmediately,
         trackTabSwitches,
         certificateEnabled,
-        certificateMinMarks: certificateMinMarks !== '' ? Math.max(0, Number(certificateMinMarks)) : 10,
-        certificateMinPercentage: certificateMinPercentage !== '' ? Math.max(0, Number(certificateMinPercentage)) : 0,
+        certificateMinMarks: 0,
+        certificateMinPercentage: certificateMinPercentage !== '' ? Math.max(0, Number(certificateMinPercentage)) : 70,
         certificateTitle: certificateTitle.trim() || title.trim(),
         certificateSignatory: certificateSignatory.trim() || 'Director',
         certificateSignatoryTitle: certificateSignatoryTitle.trim() || 'A5 Automation',
@@ -465,37 +465,25 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
 
                 {certificateEnabled && (
                   <div className="space-y-3 pt-3 border-t border-amber-200/80">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Minimum Marks Cutoff (e.g. 10)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={certificateMinMarks}
-                          onChange={(e) => setCertificateMinMarks(e.target.value)}
-                          placeholder="10"
-                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
-                        />
-                        <p className="text-[10px] text-slate-500 mt-1">Marks threshold (e.g. 10). Set to 0 if not used.</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Minimum Percentage Cutoff (%)
-                        </label>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Minimum Qualifying Percentage (%)
+                      </label>
+                      <div className="relative">
                         <input
                           type="number"
                           min="0"
                           max="100"
                           value={certificateMinPercentage}
                           onChange={(e) => setCertificateMinPercentage(e.target.value)}
-                          placeholder="0"
-                          className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
+                          placeholder="70"
+                          className="w-full px-3 py-2 pr-8 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
                         />
-                        <p className="text-[10px] text-slate-500 mt-1">Percentage threshold (e.g. 60%). Set to 0 to disable.</p>
+                        <span className="absolute right-3 top-2 text-xs font-bold text-slate-400">%</span>
                       </div>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Percentage score required to qualify and unlock the official certificate (e.g. 70%).
+                      </p>
                     </div>
 
                     <div>
@@ -506,21 +494,15 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                         type="text"
                         value={certificateTitle}
                         onChange={(e) => setCertificateTitle(e.target.value)}
-                        placeholder={title || 'Industrial Automation Skill Training Program'}
+                        placeholder={title || 'Industrial Automation Skills Assessment'}
                         className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-amber-200"
                       />
                     </div>
 
-
-
                     <div className="bg-amber-100/60 p-2.5 rounded-lg text-[11px] text-amber-900 flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
                       <span>
-                        {Number(certificateMinMarks) > 0 && Number(certificateMinPercentage) > 0
-                          ? `Students who score ≥ ${certificateMinMarks} marks OR ≥ ${certificateMinPercentage}% can view and download their verified certificate.`
-                          : Number(certificateMinMarks) > 0
-                          ? `Students who score ≥ ${certificateMinMarks} marks can view and download their verified certificate.`
-                          : Number(certificateMinPercentage) > 0
+                        {Number(certificateMinPercentage) > 0
                           ? `Students who score ≥ ${certificateMinPercentage}% can view and download their verified certificate.`
                           : `All students completing the assessment will receive their verified certificate.`}
                       </span>
