@@ -270,7 +270,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                     {cert.enabled ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[11px] font-semibold border border-amber-200">
                         <Award className="w-3 h-3 text-amber-600" />
-                        <span>≥ {cert.minMarks}m</span>
+                        <span>≥ {cert.minPercentage > 0 ? `${cert.minPercentage}%` : `${cert.minMarks}m`}</span>
                       </span>
                     ) : (
                       <span className="text-[11px] text-slate-400">No Cert</span>

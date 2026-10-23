@@ -80,6 +80,26 @@ function getPaperCert(p?: Paper) {
   return cert;
 }
 
+function checkSubmissionEligibility(sub: Submission, cert: ReturnType<typeof getPaperCert>): boolean {
+  const certInfo = (sub.student_data as any)?._certificate;
+  if (certInfo?.issued !== undefined) return !!certInfo.issued;
+  if (sub.certificate_issued !== undefined && sub.certificate_issued !== null) return !!sub.certificate_issued;
+  if (!cert.enabled) return false;
+
+  const hasMarks = cert.minMarks > 0;
+  const hasPercent = cert.minPercentage > 0;
+  if (hasMarks && hasPercent) {
+    return sub.total_score >= cert.minMarks || sub.percentage >= cert.minPercentage;
+  }
+  if (hasPercent) {
+    return sub.percentage >= cert.minPercentage;
+  }
+  if (hasMarks) {
+    return sub.total_score >= cert.minMarks;
+  }
+  return true;
+}
+
 export default function AnalyticsTab({
   papers,
   selectedPaperId,
@@ -98,23 +118,45 @@ export default function AnalyticsTab({
     return submissions.filter((sub) => sub.paper_id === selectedPaperId);
   }, [submissions, selectedPaperId]);
 
-  // Search filtered
+  // Search filtered & sorted by score descending (highest score first)
   const searchedSubmissions = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return filteredSubmissions;
-    return filteredSubmissions.filter(
-      (sub) =>
-        sub.student_name.toLowerCase().includes(q) ||
-        sub.student_email.toLowerCase().includes(q) ||
-        sub.student_phone.toLowerCase().includes(q) ||
-        sub.student_college.toLowerCase().includes(q)
-    );
+    const list = !q
+      ? filteredSubmissions
+      : filteredSubmissions.filter(
+          (sub) =>
+            sub.student_name.toLowerCase().includes(q) ||
+            sub.student_email.toLowerCase().includes(q) ||
+            sub.student_phone.toLowerCase().includes(q) ||
+            sub.student_college.toLowerCase().includes(q)
+        );
+
+    return [...list].sort((a, b) => {
+      if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+      if ((b.percentage || 0) !== (a.percentage || 0)) return (b.percentage || 0) - (a.percentage || 0);
+      return (a.time_taken_seconds || 0) - (b.time_taken_seconds || 0);
+    });
   }, [filteredSubmissions, searchQuery]);
 
-  // Metrics
+  // Metrics with dynamic pass cutoff from paper settings
   const metrics = useMemo(() => {
     const total = filteredSubmissions.length;
-    if (total === 0) return { total: 0, avgPct: 0, highest: 0, passCount: 0, passRate: 0 };
+    const hasCert = currentCert.enabled;
+    const hasPercentCutoff = hasCert && currentCert.minPercentage > 0;
+    const hasMarksCutoff = hasCert && currentCert.minMarks > 0;
+
+    let cutoffLabel = '≥50% passing cutoff';
+    if (hasPercentCutoff && hasMarksCutoff) {
+      cutoffLabel = `≥${currentCert.minPercentage}% or ≥${currentCert.minMarks}m cutoff`;
+    } else if (hasPercentCutoff) {
+      cutoffLabel = `≥${currentCert.minPercentage}% passing cutoff`;
+    } else if (hasMarksCutoff) {
+      cutoffLabel = `≥${currentCert.minMarks} marks cutoff`;
+    }
+
+    if (total === 0) {
+      return { total: 0, avgPct: 0, highest: 0, passCount: 0, passRate: 0, cutoffLabel };
+    }
 
     let totalPct = 0;
     let highest = 0;
@@ -123,7 +165,12 @@ export default function AnalyticsTab({
     filteredSubmissions.forEach((sub) => {
       totalPct += sub.percentage || 0;
       if (sub.total_score > highest) highest = sub.total_score;
-      if (sub.percentage >= 50) passCount++;
+
+      const passed = (hasPercentCutoff || hasMarksCutoff)
+        ? checkSubmissionEligibility(sub, currentCert)
+        : sub.percentage >= 50;
+
+      if (passed) passCount++;
     });
 
     return {
@@ -132,8 +179,9 @@ export default function AnalyticsTab({
       highest,
       passCount,
       passRate: Math.round((passCount / total) * 100),
+      cutoffLabel,
     };
-  }, [filteredSubmissions]);
+  }, [filteredSubmissions, currentCert]);
 
   // Top Performers for Bar Chart
   const topPerformersChartData = useMemo(() => {
@@ -183,20 +231,50 @@ export default function AnalyticsTab({
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredSubmissions]);
 
-  // Export to Excel / CSV
+  // Export to Excel / CSV with proper competition rank sorting
   const handleExportExcel = () => {
     if (filteredSubmissions.length === 0) {
       alert('No submission data available to export.');
       return;
     }
 
-    const rows = filteredSubmissions.map((sub, index) => {
+    // Sort submissions for true ranking:
+    // 1. Total score DESC (highest first)
+    // 2. Percentage DESC
+    // 3. Time taken ASC (tie-breaker: faster attempt gets higher rank)
+    // 4. Submitted at ASC (earlier attempt gets higher rank)
+    const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
+      if (b.total_score !== a.total_score) {
+        return b.total_score - a.total_score;
+      }
+      if ((b.percentage || 0) !== (a.percentage || 0)) {
+        return (b.percentage || 0) - (a.percentage || 0);
+      }
+      if ((a.time_taken_seconds || 0) !== (b.time_taken_seconds || 0)) {
+        return (a.time_taken_seconds || 0) - (b.time_taken_seconds || 0);
+      }
+      return new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime();
+    });
+
+    let currentRank = 1;
+    const rows = sortedSubmissions.map((sub, index) => {
+      if (index > 0) {
+        const prev = sortedSubmissions[index - 1];
+        if (sub.total_score === prev.total_score && (sub.percentage || 0) === (prev.percentage || 0)) {
+          // Tied with previous student: same rank
+        } else {
+          currentRank = index + 1;
+        }
+      } else {
+        currentRank = 1;
+      }
+
+      const isEligible = checkSubmissionEligibility(sub, currentCert);
       const certInfo = (sub.student_data as any)?._certificate;
-      const isEligible = certInfo?.issued || sub.certificate_issued || (currentCert.enabled && sub.total_score >= currentCert.minMarks);
       const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : 'N/A');
 
       const base: Record<string, any> = {
-        'Rank': index + 1,
+        'Rank': currentRank,
         'Student Name': sub.student_name,
         'Email Address': sub.student_email,
         'Phone Number': sub.student_phone,
@@ -314,7 +392,7 @@ export default function AnalyticsTab({
             </div>
           </div>
           <span className="text-2xl font-bold text-slate-900">{metrics.passRate}%</span>
-          <p className="text-xs text-slate-500 mt-0.5">&ge;50% passing cutoff</p>
+          <p className="text-xs text-slate-500 mt-0.5">{metrics.cutoffLabel}</p>
         </div>
       </div>
 
@@ -429,19 +507,8 @@ export default function AnalyticsTab({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {searchedSubmissions.map((sub) => {
+                const isEligible = checkSubmissionEligibility(sub, currentCert);
                 const certInfo = (sub.student_data as any)?._certificate;
-                const hasMarks = currentCert.minMarks > 0;
-                const hasPercent = currentCert.minPercentage > 0;
-                const satisfiesCutoff = currentCert.enabled && (
-                  hasMarks && hasPercent
-                    ? sub.total_score >= currentCert.minMarks || sub.percentage >= currentCert.minPercentage
-                    : hasMarks
-                    ? sub.total_score >= currentCert.minMarks
-                    : hasPercent
-                    ? sub.percentage >= currentCert.minPercentage
-                    : true
-                );
-                const isEligible = certInfo?.issued || sub.certificate_issued || satisfiesCutoff;
                 const certId = certInfo?.id || sub.certificate_id || (isEligible ? `A5-2026-${sub.id.substring(0, 6).toUpperCase()}` : '');
 
                 return (
