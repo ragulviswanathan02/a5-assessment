@@ -161,10 +161,10 @@ export default function CertificateModal({ data, onClose }: Props) {
               boxSizing: 'border-box',
             }}
           >
-            {/* ── Flowing Content Area (balanced vertical rhythm filling the certificate down to the bottom seal) ── */}
+            {/* ── Flowing Content Area (balanced vertical rhythm with comfortable clearance above bottom seal) ── */}
             <div style={{
               position: 'absolute',
-              top: '46px',
+              top: '42px',
               left: '120px',
               right: '120px',
               display: 'flex',
@@ -174,16 +174,16 @@ export default function CertificateModal({ data, onClose }: Props) {
             }}>
 
               {/* Official Academy Header Logo */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/a5-company-logo.png"
                   alt="A5 Automation"
-                  style={{ height: '52px', width: 'auto', objectFit: 'contain', marginBottom: '4px' }}
+                  style={{ height: '50px', width: 'auto', objectFit: 'contain', marginBottom: '3px' }}
                 />
                 <div style={{
                   fontFamily: "'Montserrat', sans-serif",
-                  fontSize: '13px',
+                  fontSize: '12.5px',
                   fontWeight: 800,
                   letterSpacing: '2.5px',
                   color: '#0c2340',
@@ -196,19 +196,19 @@ export default function CertificateModal({ data, onClose }: Props) {
                   alignItems: 'center',
                   gap: '8px',
                   justifyContent: 'center',
-                  margin: '3px 0',
+                  margin: '2px 0',
                 }}>
-                  <div style={{ width: '48px', height: '1.2px', background: '#c8a84b' }} />
+                  <div style={{ width: '46px', height: '1.2px', background: '#c8a84b' }} />
                   <span style={{
                     fontFamily: "'Montserrat', sans-serif",
-                    fontSize: '9px',
+                    fontSize: '8.5px',
                     fontWeight: 700,
                     letterSpacing: '3px',
                     color: '#0c2340',
                   }}>
                     TRAINING ACADEMY
                   </span>
-                  <div style={{ width: '48px', height: '1.2px', background: '#c8a84b' }} />
+                  <div style={{ width: '46px', height: '1.2px', background: '#c8a84b' }} />
                 </div>
                 <div style={{
                   fontFamily: "'Montserrat', sans-serif",
@@ -224,12 +224,12 @@ export default function CertificateModal({ data, onClose }: Props) {
               {/* Title Section */}
               <p style={{
                 fontFamily: "'Cinzel',serif",
-                fontSize: '15px',
+                fontSize: '14.5px',
                 fontWeight: 700,
                 letterSpacing: '5px',
                 color: '#0c2340',
                 textTransform: 'uppercase',
-                margin: '0 0 8px',
+                margin: '0 0 6px',
               }}>
                 Certificate of
               </p>
@@ -241,7 +241,7 @@ export default function CertificateModal({ data, onClose }: Props) {
                 color: '#0c2340',
                 textTransform: 'uppercase',
                 lineHeight: 1.2,
-                margin: '0 0 22px',
+                margin: '0 0 18px',
                 maxWidth: '680px',
               }}>
                 {titleText}
@@ -249,10 +249,10 @@ export default function CertificateModal({ data, onClose }: Props) {
 
               {/* Recipient & Qualification Details */}
               <p style={{
-                fontSize: '13px',
+                fontSize: '12.5px',
                 fontWeight: 600,
                 color: '#1a2b4a',
-                margin: '0 0 4px',
+                margin: '0 0 3px',
               }}>
                 This is to certify that
               </p>
@@ -260,7 +260,7 @@ export default function CertificateModal({ data, onClose }: Props) {
               {/* Student Name */}
               <div style={{
                 fontFamily: "'Alex Brush',cursive",
-                fontSize: '54px',
+                fontSize: '52px',
                 fontWeight: 400,
                 color: '#0c2340',
                 lineHeight: 1.05,
@@ -272,37 +272,37 @@ export default function CertificateModal({ data, onClose }: Props) {
 
               {/* Refined Gold Underline */}
               <div style={{
-                width: '460px',
-                maxWidth: '72%',
+                width: '450px',
+                maxWidth: '70%',
                 height: '1.5px',
                 background: 'linear-gradient(90deg, transparent 0%, #c8a84b 20%, #e5c365 50%, #c8a84b 80%, transparent 100%)',
-                margin: '6px auto 16px',
+                margin: '5px auto 13px',
               }} />
 
               <p style={{
-                fontSize: '14.5px',
+                fontSize: '14px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 6px',
+                margin: '0 0 4px',
               }}>
                 of {collegeText}
               </p>
 
               <p style={{
-                fontSize: '13px',
+                fontSize: '12.5px',
                 fontWeight: 500,
                 color: '#334155',
-                margin: '0 0 6px',
+                margin: '0 0 4px',
               }}>
                 has successfully qualified in the
               </p>
 
               <h3 style={{
-                fontSize: '17px',
+                fontSize: '16.5px',
                 fontWeight: 800,
                 color: '#0c2340',
                 letterSpacing: '0.3px',
-                margin: '0 0 18px',
+                margin: '0 0 15px',
               }}>
                 {qualificationAssessmentTitle}
               </h3>
@@ -313,10 +313,10 @@ export default function CertificateModal({ data, onClose }: Props) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '14px',
-                fontSize: '14px',
+                fontSize: '13.5px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 18px',
+                margin: '0 0 15px',
                 letterSpacing: '0.2px',
               }}>
                 <span>
@@ -332,13 +332,13 @@ export default function CertificateModal({ data, onClose }: Props) {
                 </span>
               </div>
 
-              {/* Academy Disclaimer — sharp, readable dark slate, no dullness */}
+              {/* Academy Disclaimer — sharp, readable dark slate, with 35-40px clearance above laurel seal */}
               <p style={{
-                fontSize: '11px',
+                fontSize: '10.5px',
                 fontWeight: 500,
                 color: '#1e293b',
-                lineHeight: 1.6,
-                maxWidth: '620px',
+                lineHeight: 1.5,
+                maxWidth: '640px',
                 margin: '0 auto',
                 letterSpacing: '0.1px',
               }}>
