@@ -53,6 +53,10 @@ export default function CertificateModal({ data, onClose }: Props) {
   const titleText = data.paperTitle || 'Industrial Automation Aptitude';
   const collegeText = data.studentCollege || 'Your Institution';
   const displayName = formatDisplayName(data.studentName);
+  const qualificationAssessmentTitle =
+    titleText.trim().toLowerCase().endsWith('assessment')
+      ? titleText.trim()
+      : `${titleText.trim()} Assessment`;
 
   return (
     <div style={{
@@ -157,10 +161,10 @@ export default function CertificateModal({ data, onClose }: Props) {
               boxSizing: 'border-box',
             }}
           >
-            {/* ── Flowing Content Area (perfectly balanced matching original PDF) ── */}
+            {/* ── Flowing Content Area (perfectly balanced with generous breathing room from top gold border) ── */}
             <div style={{
               position: 'absolute',
-              top: '168px',
+              top: '44px',
               left: '120px',
               right: '120px',
               display: 'flex',
@@ -169,27 +173,75 @@ export default function CertificateModal({ data, onClose }: Props) {
               textAlign: 'center',
             }}>
 
+              {/* Official Academy Header Logo — elegant 23px breathing room from the top gold border */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/a5-company-logo.png"
+                  alt="A5 Automation"
+                  style={{ height: '48px', width: 'auto', objectFit: 'contain', marginBottom: '3px' }}
+                />
+                <div style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: '12.5px',
+                  fontWeight: 800,
+                  letterSpacing: '2.5px',
+                  color: '#0c2340',
+                  lineHeight: 1.2,
+                }}>
+                  A5 AUTOMATION
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  margin: '2px 0',
+                }}>
+                  <div style={{ width: '45px', height: '1.2px', background: '#c8a84b' }} />
+                  <span style={{
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontSize: '8.5px',
+                    fontWeight: 700,
+                    letterSpacing: '3px',
+                    color: '#0c2340',
+                  }}>
+                    TRAINING ACADEMY
+                  </span>
+                  <div style={{ width: '45px', height: '1.2px', background: '#c8a84b' }} />
+                </div>
+                <div style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: '8px',
+                  fontWeight: 600,
+                  letterSpacing: '2px',
+                  color: '#475569',
+                }}>
+                  Learn &bull; Build &bull; Advance
+                </div>
+              </div>
+
               {/* Title Section */}
               <p style={{
                 fontFamily: "'Cinzel',serif",
-                fontSize: '15px',
+                fontSize: '14.5px',
                 fontWeight: 700,
                 letterSpacing: '5px',
                 color: '#0c2340',
                 textTransform: 'uppercase',
-                margin: '0 0 6px',
+                margin: '0 0 4px',
               }}>
                 Certificate of
               </p>
               <h1 style={{
                 fontFamily: "'Cinzel',serif",
-                fontSize: '26px',
+                fontSize: '25px',
                 fontWeight: 800,
                 letterSpacing: '2px',
                 color: '#0c2340',
                 textTransform: 'uppercase',
                 lineHeight: 1.2,
-                margin: '0 0 24px',
+                margin: '0 0 16px',
                 maxWidth: '680px',
               }}>
                 {titleText}
@@ -197,7 +249,7 @@ export default function CertificateModal({ data, onClose }: Props) {
 
               {/* Recipient & Qualification Details */}
               <p style={{
-                fontSize: '13px',
+                fontSize: '12.5px',
                 fontWeight: 600,
                 color: '#1a2b4a',
                 margin: '0 0 2px',
@@ -208,7 +260,7 @@ export default function CertificateModal({ data, onClose }: Props) {
               {/* Student Name */}
               <div style={{
                 fontFamily: "'Alex Brush',cursive",
-                fontSize: '52px',
+                fontSize: '50px',
                 fontWeight: 400,
                 color: '#0c2340',
                 lineHeight: 1.05,
@@ -231,7 +283,7 @@ export default function CertificateModal({ data, onClose }: Props) {
                 fontSize: '13.5px',
                 fontWeight: 700,
                 color: '#0c2340',
-                margin: '0 0 3px',
+                margin: '0 0 2px',
               }}>
                 of {collegeText}
               </p>
@@ -240,19 +292,19 @@ export default function CertificateModal({ data, onClose }: Props) {
                 fontSize: '12px',
                 fontWeight: 500,
                 color: '#334155',
-                margin: '0 0 3px',
+                margin: '0 0 2px',
               }}>
                 has successfully qualified in the
               </p>
 
               <h3 style={{
-                fontSize: '16.5px',
+                fontSize: '16px',
                 fontWeight: 800,
                 color: '#0c2340',
                 letterSpacing: '0.3px',
-                margin: '0 0 14px',
+                margin: '0 0 12px',
               }}>
-                {titleText} Assessment
+                {qualificationAssessmentTitle}
               </h3>
 
               {/* Score & Qualifying criteria — bold, sharp, high contrast */}
