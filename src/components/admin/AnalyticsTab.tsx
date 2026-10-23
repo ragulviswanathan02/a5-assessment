@@ -276,19 +276,32 @@ export default function AnalyticsTab({
     };
   }, [filteredSubmissions, currentCert]);
 
-  // Top Performers for Bar Chart
+  // Qualified Performers for Bar Chart in Performance Order (All qualified students)
   const topPerformersChartData = useMemo(() => {
-    return [...filteredSubmissions]
-      .sort((a, b) => b.total_score - a.total_score)
-      .slice(0, 8)
-      .map((sub) => ({
-        name: sub.student_name.split(' ')[0] || sub.student_name,
+    // 1. Filter ONLY candidates who met the qualification criteria
+    const qualified = filteredSubmissions.filter((sub) =>
+      checkSubmissionEligibility(sub, currentCert)
+    );
+
+    // 2. Sort in strict performance order:
+    //    Score DESC -> Percentage DESC -> Faster Time ASC
+    return [...qualified]
+      .sort((a, b) => {
+        if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+        if ((b.percentage || 0) !== (a.percentage || 0)) return (b.percentage || 0) - (a.percentage || 0);
+        return (a.time_taken_seconds || 0) - (b.time_taken_seconds || 0);
+      })
+      .map((sub, idx) => ({
+        rank: idx + 1,
+        name: (sub.student_name || '').trim().split(' ')[0] || sub.student_name,
         fullName: sub.student_name,
         score: sub.total_score,
+        maxScore: sub.max_score,
         percentage: sub.percentage,
         college: sub.student_college,
+        timeTakenMinutes: Math.round((sub.time_taken_seconds || 0) / 60),
       }));
-  }, [filteredSubmissions]);
+  }, [filteredSubmissions, currentCert]);
 
   // Topic Performance Breakdown
   const topicPerformanceData = useMemo(() => {
@@ -482,13 +495,18 @@ export default function AnalyticsTab({
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Top Mark</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase">Qualified Candidates</span>
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Trophy className="w-4 h-4" />
+              <Award className="w-4 h-4" />
             </div>
           </div>
-          <span className="text-2xl font-bold text-slate-900">{metrics.highest}</span>
-          <p className="text-xs text-slate-500 mt-0.5">Highest marks scored</p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-slate-900">{metrics.passCount}</span>
+            <span className="text-xs font-medium text-slate-400">/ {metrics.total} students</span>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Eligible for Certificate (Top Mark: {metrics.highest})
+          </p>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
@@ -506,36 +524,84 @@ export default function AnalyticsTab({
       {/* Visual Analytics Charts */}
       {filteredSubmissions.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Students Bar Chart */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-            <h3 className="text-sm font-bold text-slate-900 mb-1">Top Performers Leaderboard</h3>
-            <p className="text-xs text-slate-500 mb-4">Highest scoring students in this paper</p>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topPerformersChartData}>
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-2.5 rounded-xl shadow-lg border border-slate-200 text-xs">
-                            <p className="font-bold text-slate-900">{data.fullName}</p>
-                            <p className="text-slate-600">College: {data.college || 'N/A'}</p>
-                            <p className="text-indigo-600 font-semibold mt-1">
-                              Score: {data.score} marks ({data.percentage}%)
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="score" fill="#4f46e5" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Top Students Bar Chart: All qualified candidates in performance order */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-bold text-slate-900">Top Performers Leaderboard</h3>
+                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
+                  {topPerformersChartData.length} Qualified
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">
+                All qualified candidates ranked in performance order by score &amp; speed
+              </p>
             </div>
+
+            {topPerformersChartData.length > 0 ? (
+              <div className="h-64 w-full overflow-x-auto">
+                <div
+                  className="h-full"
+                  style={{
+                    minWidth: `${Math.max(100, topPerformersChartData.length * (topPerformersChartData.length > 8 ? 55 : 45))}px`,
+                    width: '100%',
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topPerformersChartData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: topPerformersChartData.length > 6 ? 28 : 10 }}
+                    >
+                      <XAxis
+                        dataKey="name"
+                        stroke="#64748b"
+                        fontSize={11}
+                        interval={0}
+                        angle={topPerformersChartData.length > 6 ? -25 : 0}
+                        textAnchor={topPerformersChartData.length > 6 ? 'end' : 'middle'}
+                      />
+                      <YAxis stroke="#64748b" fontSize={11} />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-white p-3 rounded-xl shadow-xl border border-slate-200 text-xs">
+                                <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                                  <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-[10px] flex items-center justify-center font-bold">
+                                    #{data.rank}
+                                  </span>
+                                  <span>{data.fullName}</span>
+                                </p>
+                                <p className="text-slate-600 mt-1">College: {data.college || 'N/A'}</p>
+                                <p className="text-indigo-600 font-semibold mt-1">
+                                  Score: {data.score} / {data.maxScore} ({data.percentage}%)
+                                </p>
+                                {data.timeTakenMinutes > 0 && (
+                                  <p className="text-slate-400 text-[11px] mt-0.5">
+                                    Time Taken: {data.timeTakenMinutes} min
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar dataKey="score" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ) : (
+              <div className="h-64 flex flex-col items-center justify-center text-center p-6 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <Award className="w-8 h-8 text-slate-300 mb-2" />
+                <p className="text-xs font-semibold text-slate-600">No Qualified Candidates Yet</p>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                  Once candidates achieve the {metrics.cutoffLabel}, their performance will be ranked here.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Topic-Wise Performance Chart */}
