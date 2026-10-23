@@ -29,6 +29,8 @@ import {
   TrendingUp,
   Printer,
   ShieldCheck,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -36,6 +38,7 @@ interface Props {
   selectedPaperId: string;
   onSelectPaperId: (id: string) => void;
   submissions: Submission[];
+  onRefresh?: () => void;
 }
 
 function parseNum(val: any, fallback: number): number {
@@ -106,10 +109,42 @@ export default function AnalyticsTab({
   selectedPaperId,
   onSelectPaperId,
   submissions,
+  onRefresh,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [inspectSubmission, setInspectSubmission] = useState<Submission | null>(null);
   const [activeCertData, setActiveCertData] = useState<CertificateData | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteSubmission = async (sub: Submission) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the submission for ${sub.student_name}?\n\nThis will permanently delete their result and certificate record.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(sub.id);
+      const res = await fetch(`/api/admin/submissions?id=${sub.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete submission');
+      }
+
+      if (inspectSubmission?.id === sub.id) {
+        setInspectSubmission(null);
+      }
+
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (err: any) {
+      alert('Error deleting submission: ' + err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const currentPaper = papers.find((p) => p.id === selectedPaperId);
   const currentCert = useMemo(() => getPaperCert(currentPaper), [currentPaper]);
@@ -590,10 +625,23 @@ export default function AnalyticsTab({
                         )}
                         <button
                           onClick={() => setInspectSubmission(sub)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors cursor-pointer text-xs"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Details</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSubmission(sub)}
+                          disabled={deletingId === sub.id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-colors cursor-pointer text-xs font-semibold disabled:opacity-50"
+                          title="Delete this submission record"
+                        >
+                          {deletingId === sub.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -698,7 +746,20 @@ export default function AnalyticsTab({
               </div>
             )}
 
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleDeleteSubmission(inspectSubmission)}
+                disabled={deletingId === inspectSubmission.id}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                {deletingId === inspectSubmission.id ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>Delete Submission</span>
+              </button>
               <button
                 onClick={() => setInspectSubmission(null)}
                 className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200 cursor-pointer"
