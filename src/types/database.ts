@@ -36,6 +36,7 @@ export interface Paper {
   duration_minutes: number; // 0 for no limit
   is_active: boolean;
   show_results_immediately: boolean;
+  show_detailed_answers?: boolean;
   track_tab_switches: boolean;
   // Certificate Settings
   certificate_enabled?: boolean;
@@ -58,6 +59,23 @@ export interface TopicScore {
   scored: number;
   total: number;
   percentage: number;
+}
+
+export interface QuestionReviewItem {
+  questionId: string;
+  orderIndex: number;
+  questionText: string;
+  questionType: QuestionType;
+  topic: string;
+  options: string[];
+  studentAnswer: any;
+  correctAnswers: (number | string)[];
+  isCorrect: boolean;
+  isSkipped: boolean;
+  marksAwarded: number;
+  maxMarks: number;
+  negativeMarks: number;
+  explanation?: string;
 }
 
 export interface Submission {

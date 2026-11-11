@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Paper, Submission } from '@/types/database';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Paper, Submission, Question, QuestionReviewItem } from '@/types/database';
+import { supabase } from '@/lib/supabase';
+import { evaluateAssessment } from '@/lib/grading';
+import QuestionReviewSection from '@/components/common/QuestionReviewSection';
 import CertificateModal, { CertificateData } from '@/components/certificate/CertificateModal';
 import {
   BarChart,
@@ -41,6 +44,7 @@ interface Props {
   selectedPaperId: string;
   onSelectPaperId: (id: string) => void;
   submissions: Submission[];
+  questions?: Question[];
   onRefresh?: () => void;
 }
 
@@ -112,14 +116,65 @@ export default function AnalyticsTab({
   selectedPaperId,
   onSelectPaperId,
   submissions,
+  questions = [],
   onRefresh,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCollege, setSelectedCollege] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'qualified' | 'not_qualified'>('all');
   const [inspectSubmission, setInspectSubmission] = useState<Submission | null>(null);
+  const [inspectModalTab, setInspectModalTab] = useState<'review' | 'profile'>('review');
+  const [inspectQuestions, setInspectQuestions] = useState<Question[]>([]);
+  const [loadingInspectQ, setLoadingInspectQ] = useState(false);
   const [activeCertData, setActiveCertData] = useState<CertificateData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Synchronize or fetch questions when inspecting a submission
+  useEffect(() => {
+    if (!inspectSubmission) {
+      setInspectQuestions([]);
+      return;
+    }
+    setInspectModalTab('review');
+
+    // If parent questions prop matches this submission's paper_id, use it directly
+    if (
+      questions &&
+      questions.length > 0 &&
+      questions[0].paper_id === inspectSubmission.paper_id
+    ) {
+      setInspectQuestions(questions);
+      return;
+    }
+
+    // Otherwise fetch dynamically for the submission's paper
+    async function loadPaperQuestions() {
+      if (!inspectSubmission) return;
+      try {
+        setLoadingInspectQ(true);
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('paper_id', inspectSubmission.paper_id)
+          .order('order_index', { ascending: true });
+
+        if (!error && data) {
+          setInspectQuestions(data as Question[]);
+        }
+      } catch (e) {
+        console.error('Error fetching questions for submission review:', e);
+      } finally {
+        setLoadingInspectQ(false);
+      }
+    }
+    loadPaperQuestions();
+  }, [inspectSubmission, questions]);
+
+  // Evaluate assessment on the fly for the inspected candidate
+  const inspectGrading = useMemo(() => {
+    if (!inspectSubmission || inspectQuestions.length === 0) return null;
+    return evaluateAssessment(inspectQuestions, inspectSubmission.answers || {});
+  }, [inspectSubmission, inspectQuestions]);
 
   // Reset filters when changing active question paper
   React.useEffect(() => {
@@ -395,6 +450,22 @@ export default function AnalyticsTab({
         'Time Taken (seconds)': sub.time_taken_seconds,
         'Submitted At': new Date(sub.submitted_at).toLocaleString(),
       };
+
+      // Add itemized question counts if questions are loaded
+      if (questions && questions.length > 0 && questions[0].paper_id === selectedPaperId) {
+        const evalRes = evaluateAssessment(questions, sub.answers || {});
+        let cCount = 0;
+        let incCount = 0;
+        let skCount = 0;
+        evalRes.review.forEach((r) => {
+          if (r.isSkipped) skCount++;
+          else if (r.isCorrect) cCount++;
+          else incCount++;
+        });
+        base['Questions Correct'] = cCount;
+        base['Questions Incorrect'] = incCount;
+        base['Questions Skipped'] = skCount;
+      }
 
       // Add dynamic student form data
       if (sub.student_data) {
@@ -992,91 +1063,189 @@ export default function AnalyticsTab({
 
       {/* Student Detailed Inspect Modal */}
       {inspectSubmission && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="font-bold text-slate-900 text-base">Candidate Profile & Report</h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3 shrink-0">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl">
+                    {inspectSubmission.student_name}
+                  </h3>
+                  <span
+                    className={`text-2xs font-extrabold px-2.5 py-0.5 rounded-full ${
+                      checkSubmissionEligibility(inspectSubmission, currentCert)
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {checkSubmissionEligibility(inspectSubmission, currentCert)
+                      ? 'Qualified'
+                      : 'Not Qualified'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {inspectSubmission.student_college || 'Candidate Test Response'} • Submitted on{' '}
+                  {new Date(inspectSubmission.submitted_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* Header Badges & Close Button */}
+              <div className="flex items-center gap-2">
+                <div className="bg-indigo-50 border border-indigo-100 text-indigo-900 px-3 py-1 rounded-xl text-xs font-bold">
+                  Score: {inspectSubmission.total_score} / {inspectSubmission.max_score} ({inspectSubmission.percentage}%)
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInspectSubmission(null)}
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-lg font-bold transition-colors cursor-pointer"
+                  title="Close inspection"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex items-center gap-2 pt-3 pb-2 border-b border-slate-100 shrink-0">
               <button
-                onClick={() => setInspectSubmission(null)}
-                className="text-slate-400 hover:text-slate-600 text-xl font-bold"
+                type="button"
+                onClick={() => setInspectModalTab('review')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  inspectModalTab === 'review'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
               >
-                &times;
+                Question Breakdown &amp; Solutions ({inspectQuestions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setInspectModalTab('profile')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  inspectModalTab === 'profile'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Profile &amp; Violations
               </button>
             </div>
 
-            {/* Profile Card */}
-            <div className="bg-slate-50 p-4 rounded-xl space-y-2 mb-4 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Name:</span>
-                <span className="font-semibold text-slate-900">{inspectSubmission.student_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">College:</span>
-                <span className="font-semibold text-slate-900">{inspectSubmission.student_college || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Email:</span>
-                <span className="text-slate-700">{inspectSubmission.student_email || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Phone:</span>
-                <span className="text-slate-700">{inspectSubmission.student_phone || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Tab Switches:</span>
-                <span className="font-semibold text-amber-600">{inspectSubmission.tab_switch_count} violations</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Time Taken:</span>
-                <span className="text-slate-700">{Math.round(inspectSubmission.time_taken_seconds / 60)} minutes</span>
-              </div>
+            {/* Modal Body (Scrollable) */}
+            <div className="overflow-y-auto flex-1 pr-1 py-3">
+              {inspectModalTab === 'review' ? (
+                <div>
+                  {loadingInspectQ ? (
+                    <div className="py-14 text-center">
+                      <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-slate-500">
+                        Evaluating candidate question answers...
+                      </p>
+                    </div>
+                  ) : inspectGrading && inspectGrading.review.length > 0 ? (
+                    <QuestionReviewSection
+                      review={inspectGrading.review}
+                      studentName={inspectSubmission.student_name}
+                      paperTitle={currentPaper?.title}
+                      totalScore={inspectSubmission.total_score}
+                      maxScore={inspectSubmission.max_score}
+                      percentage={inspectSubmission.percentage}
+                      isAdmin={true}
+                    />
+                  ) : (
+                    <div className="py-12 text-center text-slate-400 text-xs">
+                      No question evaluation data available for this paper.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Profile & Violations View */
+                <div className="space-y-4">
+                  {/* Candidate Quick Stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="text-2xs text-slate-500 block uppercase font-bold">Email</span>
+                      <span className="text-xs font-semibold text-slate-800 truncate block">
+                        {inspectSubmission.student_email || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="text-2xs text-slate-500 block uppercase font-bold">Phone</span>
+                      <span className="text-xs font-semibold text-slate-800 block">
+                        {inspectSubmission.student_phone || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="text-2xs text-slate-500 block uppercase font-bold">Tab Switches</span>
+                      <span
+                        className={`text-xs font-bold block ${
+                          inspectSubmission.tab_switch_count > 0 ? 'text-amber-600' : 'text-slate-800'
+                        }`}
+                      >
+                        {inspectSubmission.tab_switch_count} violations
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="text-2xs text-slate-500 block uppercase font-bold">Time Taken</span>
+                      <span className="text-xs font-semibold text-slate-800 block">
+                        {Math.round(inspectSubmission.time_taken_seconds / 60)} minutes (
+                        {inspectSubmission.time_taken_seconds}s)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Registration Fields */}
+                  {inspectSubmission.student_data && (
+                    <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl">
+                      <h4 className="text-xs font-bold text-slate-800 mb-2.5 uppercase tracking-wider">
+                        Full Registration Details
+                      </h4>
+                      <div className="space-y-1.5 text-xs">
+                        {Object.entries(inspectSubmission.student_data)
+                          .filter(([key]) => !key.startsWith('_'))
+                          .map(([key, val]) => (
+                            <div key={key} className="flex justify-between py-1 border-b border-slate-100 last:border-0">
+                              <span className="text-slate-500 capitalize">{key.replace('_', ' ')}:</span>
+                              <span className="text-slate-800 font-semibold">{String(val)}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Topic Scores */}
+                  {inspectSubmission.topic_scores && (
+                    <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl">
+                      <h4 className="text-xs font-bold text-slate-800 mb-2.5 uppercase tracking-wider">
+                        Topic Mastery Breakdown
+                      </h4>
+                      <div className="space-y-2.5">
+                        {Object.entries(inspectSubmission.topic_scores).map(([top, val]) => (
+                          <div key={top} className="text-xs">
+                            <div className="flex justify-between text-slate-700 mb-1">
+                              <span className="font-medium">{top}</span>
+                              <span className="font-bold">
+                                {val.scored} / {val.total} ({val.percentage}%)
+                              </span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-indigo-600 rounded-full"
+                                style={{ width: `${val.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Dynamic Custom Fields */}
-            {inspectSubmission.student_data && (
-              <div className="mb-4">
-                <h4 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                  Registration Details
-                </h4>
-                <div className="bg-slate-50 p-3 rounded-xl space-y-1.5 text-xs">
-                  {Object.entries(inspectSubmission.student_data).map(([key, val]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-slate-500 capitalize">{key.replace('_', ' ')}:</span>
-                      <span className="text-slate-800 font-medium">{String(val)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Topic Scores */}
-            {inspectSubmission.topic_scores && (
-              <div className="mb-4">
-                <h4 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                  Topic Mastery
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(inspectSubmission.topic_scores).map(([top, val]) => (
-                    <div key={top} className="text-xs">
-                      <div className="flex justify-between text-slate-600 mb-1">
-                        <span>{top}</span>
-                        <span className="font-semibold">
-                          {val.scored} / {val.total} ({val.percentage}%)
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-600 rounded-full"
-                          style={{ width: `${val.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={() => handleDeleteSubmission(inspectSubmission)}
@@ -1091,8 +1260,9 @@ export default function AnalyticsTab({
                 <span>Delete Submission</span>
               </button>
               <button
+                type="button"
                 onClick={() => setInspectSubmission(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200 cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer shadow-xs"
               >
                 Close
               </button>

@@ -346,6 +346,7 @@ export default function AdminDashboardPage() {
                 selectedPaperId={selectedPaperId}
                 onSelectPaperId={handleSelectPaper}
                 submissions={submissions}
+                questions={questions}
                 onRefresh={fetchData}
               />
             )}

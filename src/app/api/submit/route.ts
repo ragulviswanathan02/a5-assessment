@@ -259,6 +259,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const showDetailedSolutions =
+      paper.show_results_immediately &&
+      (paper as any).show_detailed_answers !== false;
+
     return NextResponse.json({
       success: true,
       submissionId: submission.id,
@@ -270,6 +274,7 @@ export async function POST(request: Request) {
         maxScore: grading.maxScore,
         percentage: grading.percentage,
         topicScores: paper.show_results_immediately ? grading.topicScores : {},
+        review: showDetailedSolutions ? grading.review : [],
         certificate: certInfo,
       },
     });

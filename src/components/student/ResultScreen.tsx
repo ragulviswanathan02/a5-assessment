@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { CheckCircle, Award, BarChart3, Clock, AlertCircle, Printer, Download, ShieldCheck } from 'lucide-react';
 import CertificateModal from '@/components/certificate/CertificateModal';
+import QuestionReviewSection from '@/components/common/QuestionReviewSection';
+import { QuestionReviewItem } from '@/types/database';
 
 interface Props {
   paperTitle: string;
@@ -15,6 +17,7 @@ interface Props {
     maxScore: number;
     percentage: number;
     topicScores: Record<string, { scored: number; total: number; percentage: number }>;
+    review?: QuestionReviewItem[];
     certificate?: {
       issued: boolean;
       id?: string;
@@ -62,7 +65,7 @@ export default function ResultScreen({
   const isCertQualified = !!certData && certData.issued;
 
   return (
-    <div className="max-w-2xl mx-auto my-10 px-4">
+    <div className="max-w-4xl mx-auto my-10 px-4">
       <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-10 shadow-sm text-center">
         {/* Success Icon */}
         <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4">
@@ -160,6 +163,18 @@ export default function ResultScreen({
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Detailed Per-Question Breakdown & Answer Key */}
+            {result.review && result.review.length > 0 && (
+              <QuestionReviewSection
+                review={result.review}
+                studentName={studentName}
+                paperTitle={paperTitle}
+                totalScore={result.totalScore}
+                maxScore={result.maxScore}
+                percentage={result.percentage}
+              />
             )}
           </div>
         ) : (
