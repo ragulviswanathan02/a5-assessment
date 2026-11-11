@@ -144,6 +144,7 @@ export async function POST(request: Request) {
           if (parsed.title) certConfig.title = parsed.title;
           if (parsed.signatory) certConfig.signatory = parsed.signatory;
           if (parsed.signatoryTitle) certConfig.signatoryTitle = parsed.signatoryTitle;
+          if (parsed.showDetailedAnswers !== undefined) (certConfig as any).showDetailedAnswers = !!parsed.showDetailedAnswers;
         }
       } catch (e) {}
     }
@@ -261,7 +262,8 @@ export async function POST(request: Request) {
 
     const showDetailedSolutions =
       paper.show_results_immediately &&
-      (paper as any).show_detailed_answers !== false;
+      (paper as any).show_detailed_answers !== false &&
+      (certConfig as any).showDetailedAnswers !== false;
 
     return NextResponse.json({
       success: true,

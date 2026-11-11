@@ -50,6 +50,7 @@ function getPaperCert(p: Paper) {
         if (parsed.title) cert.title = parsed.title;
         if (parsed.signatory) cert.signatory = parsed.signatory;
         if (parsed.signatoryTitle) cert.signatoryTitle = parsed.signatoryTitle;
+        if (parsed.showDetailedAnswers !== undefined) (cert as any).showDetailedAnswers = !!parsed.showDetailedAnswers;
       }
     } catch (e) {}
   }
@@ -67,6 +68,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
   const [description, setDescription] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [showResultsImmediately, setShowResultsImmediately] = useState(true);
+  const [showDetailedAnswers, setShowDetailedAnswers] = useState(true);
   const [trackTabSwitches, setTrackTabSwitches] = useState(true);
 
   // Certificate Form State
@@ -84,6 +86,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
     setDescription('');
     setDurationMinutes(30);
     setShowResultsImmediately(true);
+    setShowDetailedAnswers(true);
     setTrackTabSwitches(true);
     setCertificateEnabled(false);
     setCertificateMinMarks(10);
@@ -104,6 +107,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
     setTrackTabSwitches(p.track_tab_switches ?? true);
 
     const c = getPaperCert(p);
+    setShowDetailedAnswers((p as any).show_detailed_answers ?? (c as any).showDetailedAnswers ?? true);
     setCertificateEnabled(c.enabled);
     setCertificateMinMarks(c.minMarks);
     setCertificateMinPercentage(c.minPercentage);
@@ -155,6 +159,7 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
         description: description.trim(),
         durationMinutes: Number(durationMinutes) || 0,
         showResultsImmediately,
+        showDetailedAnswers,
         trackTabSwitches,
         certificateEnabled,
         certificateMinMarks: 0,
@@ -424,6 +429,15 @@ export default function PapersTab({ papers, onRefresh, onSelectPaper }: Props) {
                       className="w-4 h-4 rounded text-indigo-600"
                     />
                     <span className="text-slate-700 font-medium">Show immediate score</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={showDetailedAnswers}
+                      onChange={(e) => setShowDetailedAnswers(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600"
+                    />
+                    <span className="text-slate-700 font-medium">Show detailed solutions &amp; key to student</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-xs">
                     <input
